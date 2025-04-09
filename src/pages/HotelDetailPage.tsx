@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,16 +9,9 @@ import { toast } from "@/components/ui/use-toast";
 import { MapPin, Phone, Star, Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import NotFound from "./NotFound";
+import type { Database } from "@/integrations/supabase/types";
 
-type Hotel = {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  contact_info: string;
-  amenities: string[];
-  images: string[];
-};
+type Hotel = Database['public']['Tables']['hotels']['Row'];
 
 type Feedback = {
   id: string;
@@ -41,7 +33,7 @@ const HotelDetailPage = () => {
       try {
         // Fetch hotel details
         const { data: hotelData, error: hotelError } = await supabase
-          .from("hotels")
+          .from('hotels')
           .select("*")
           .eq("id", id)
           .single();
@@ -58,7 +50,7 @@ const HotelDetailPage = () => {
 
         // Fetch feedback for this hotel
         const { data: feedbackData, error: feedbackError } = await supabase
-          .from("feedback")
+          .from('feedback')
           .select("id, name, ratings, comments, created_at")
           .eq("hotel_id", id)
           .order("created_at", { ascending: false });
@@ -83,11 +75,6 @@ const HotelDetailPage = () => {
     }
   }, [id]);
 
-  if (notFound) {
-    return <NotFound />;
-  }
-
-  // Calculate average ratings
   const calculateAverageRatings = () => {
     if (!feedback.length) return {};
     
@@ -114,6 +101,10 @@ const HotelDetailPage = () => {
   };
   
   const averageRatings = calculateAverageRatings();
+
+  if (notFound) {
+    return <NotFound />;
+  }
 
   return (
     <div className="container-custom section-padding fade-in">
@@ -153,7 +144,7 @@ const HotelDetailPage = () => {
               {/* Hotel Image */}
               <div className="rounded-lg overflow-hidden mb-6 shadow-md">
                 <img
-                  src={hotel.images[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945"}
+                  src={hotel.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945"}
                   alt={hotel.name}
                   className="w-full h-80 object-cover"
                 />
@@ -176,7 +167,7 @@ const HotelDetailPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {hotel.amenities.map((amenity, index) => (
+                    {hotel.amenities?.map((amenity, index) => (
                       <Badge key={index} variant="outline" className="bg-gray-50">
                         {amenity}
                       </Badge>

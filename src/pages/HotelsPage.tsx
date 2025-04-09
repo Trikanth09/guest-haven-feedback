@@ -6,14 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import type { Database } from "@/integrations/supabase/types";
 
-type Hotel = {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  images: string[];
-};
+type Hotel = Database['public']['Tables']['hotels']['Row'];
 
 const HotelsPage = () => {
   const [hotels, setHotels] = useState<Hotel[]>([]);
@@ -23,7 +18,7 @@ const HotelsPage = () => {
     const fetchHotels = async () => {
       try {
         const { data, error } = await supabase
-          .from("hotels")
+          .from('hotels')
           .select("id, name, description, location, images");
 
         if (error) {
@@ -84,7 +79,7 @@ const HotelsPage = () => {
               <Card key={hotel.id} className="overflow-hidden h-full flex flex-col transition-all hover:shadow-lg">
                 <div className="h-48 overflow-hidden">
                   <img
-                    src={hotel.images[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945"}
+                    src={hotel.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945"}
                     alt={hotel.name}
                     className="w-full h-full object-cover transition-transform hover:scale-105"
                   />

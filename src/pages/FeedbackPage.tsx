@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
@@ -28,6 +27,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 const categories = [
   { id: "cleanliness", name: "Cleanliness" },
@@ -38,10 +38,7 @@ const categories = [
   { id: "value", name: "Value for Money" },
 ];
 
-type Hotel = {
-  id: string;
-  name: string;
-};
+type Hotel = Database['public']['Tables']['hotels']['Row'];
 
 const FeedbackFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -80,9 +77,8 @@ const FeedbackPage = () => {
     const fetchHotels = async () => {
       try {
         const { data, error } = await supabase
-          .from("hotels")
-          .select("id, name")
-          .order("name");
+          .from('hotels')
+          .select("id, name");
 
         if (error) throw error;
         setHotels(data || []);
@@ -114,9 +110,8 @@ const FeedbackPage = () => {
     setIsSubmitting(true);
     
     try {
-      // Insert feedback into Supabase
       const { error } = await supabase
-        .from("feedback")
+        .from('feedback')
         .insert({
           name: data.name,
           email: data.email,
@@ -138,7 +133,6 @@ const FeedbackPage = () => {
         description: "Thank you for your valuable feedback!",
       });
       
-      // Redirect to the hotel page after 2 seconds
       setTimeout(() => {
         navigate(`/hotels/${data.hotelId}`);
       }, 2000);

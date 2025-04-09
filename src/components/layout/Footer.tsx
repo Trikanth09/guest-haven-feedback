@@ -63,10 +63,13 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li>info@guesthaven.com</li>
-              <li>+1 (555) 123-4567</li>
-              <li>123 Hospitality Lane</li>
-              <li>New York, NY 10001</li>
+              <li>trikanth09@gmail.com</li>
+              <li>+91 9963673767</li>
+              <li>+91 8838035389</li>
+              <li>+91 9966976111</li>
+              <li>SRM University, TechPark 2</li>
+              <li>Potheri, Kattankulathur</li>
+              <li>Chennai, Tamil Nadu 603203</li>
             </ul>
           </div>
         </div>

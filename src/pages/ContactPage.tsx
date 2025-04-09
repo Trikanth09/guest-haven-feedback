@@ -72,9 +72,10 @@ const ContactPage = () => {
                   <div>
                     <h3 className="font-medium text-hotel-navy mb-1">Our Location</h3>
                     <p className="text-muted-foreground">
-                      123 Hospitality Lane<br />
-                      New York, NY 10001<br />
-                      United States
+                      SRM University, TechPark 2<br />
+                      Potheri, Kattankulathur<br />
+                      Chennai, Tamil Nadu 603203<br />
+                      India
                     </p>
                   </div>
                 </div>
@@ -85,8 +86,7 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-medium text-hotel-navy mb-1">Email</h3>
-                    <p className="text-muted-foreground">info@guesthaven.com</p>
-                    <p className="text-muted-foreground">support@guesthaven.com</p>
+                    <p className="text-muted-foreground">trikanth09@gmail.com</p>
                   </div>
                 </div>
 
@@ -96,8 +96,9 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-medium text-hotel-navy mb-1">Phone</h3>
-                    <p className="text-muted-foreground">+1 (555) 123-4567</p>
-                    <p className="text-muted-foreground">+1 (555) 987-6543</p>
+                    <p className="text-muted-foreground">+91 9963673767</p>
+                    <p className="text-muted-foreground">+91 8838035389</p>
+                    <p className="text-muted-foreground">+91 9966976111</p>
                   </div>
                 </div>
 
@@ -107,8 +108,8 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-medium text-hotel-navy mb-1">Working Hours</h3>
-                    <p className="text-muted-foreground">Monday - Friday: 9am - 6pm EST</p>
-                    <p className="text-muted-foreground">Saturday: 10am - 4pm EST</p>
+                    <p className="text-muted-foreground">Monday - Friday: 9am - 6pm IST</p>
+                    <p className="text-muted-foreground">Saturday: 10am - 4pm IST</p>
                     <p className="text-muted-foreground">Sunday: Closed</p>
                   </div>
                 </div>
@@ -143,7 +144,7 @@ const ContactPage = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone (Optional)</Label>
-                      <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" />
+                      <Input id="phone" type="tel" placeholder="+91 9963673767" />
                     </div>
                     
                     <div className="space-y-2">

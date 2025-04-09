@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
@@ -29,6 +30,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
+// Using a simplified hotel type for the dropdown
+type HotelBasic = {
+  id: string;
+  name: string;
+};
+
+// Defining the full hotel type
+type Hotel = Database['public']['Tables']['hotels']['Row'];
+
 const categories = [
   { id: "cleanliness", name: "Cleanliness" },
   { id: "staff", name: "Staff Service" },
@@ -37,8 +47,6 @@ const categories = [
   { id: "food", name: "Food & Beverage" },
   { id: "value", name: "Value for Money" },
 ];
-
-type Hotel = Database['public']['Tables']['hotels']['Row'];
 
 const FeedbackFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -55,7 +63,7 @@ const FeedbackPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const hotelIdParam = searchParams.get('hotel');
-  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotels, setHotels] = useState<HotelBasic[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { MapPin, Phone, Star, Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import NotFound from "./NotFound";
 import type { Database } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 
 type Hotel = Database['public']['Tables']['hotels']['Row'];
 
@@ -57,7 +59,13 @@ const HotelDetailPage = () => {
 
         if (feedbackError) throw feedbackError;
 
-        setFeedback(feedbackData || []);
+        // Convert Json to proper Record<string, number> type for ratings
+        const typedFeedback = feedbackData?.map(item => ({
+          ...item,
+          ratings: item.ratings as unknown as Record<string, number>
+        })) || [];
+
+        setFeedback(typedFeedback);
       } catch (error: any) {
         toast({
           title: "Error loading hotel details",

@@ -25,7 +25,9 @@ const HotelsPage = () => {
           throw error;
         }
 
-        setHotels(data || []);
+        // Making sure we have the correct type for hotels
+        const typedData = data as Hotel[];
+        setHotels(typedData || []);
       } catch (error: any) {
         toast({
           title: "Error loading hotels",

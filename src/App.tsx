@@ -12,6 +12,8 @@ import RegisterPage from "./pages/RegisterPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import HotelsPage from "./pages/HotelsPage";
+import HotelDetailPage from "./pages/HotelDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/hotels" element={<HotelsPage />} />
+            <Route path="/hotels/:id" element={<HotelDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

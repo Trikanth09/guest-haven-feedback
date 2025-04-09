@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   Card,
   CardContent,
@@ -20,11 +21,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Star, Upload } from "lucide-react";
+import { Star, Upload, CheckCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const categories = [
   { id: "cleanliness", name: "Cleanliness" },
@@ -35,19 +38,30 @@ const categories = [
   { id: "value", name: "Value for Money" },
 ];
 
+type Hotel = {
+  id: string;
+  name: string;
+};
+
 const FeedbackFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   roomNumber: z.string().optional(),
   stayDate: z.string().optional(),
+  hotelId: z.string().min(1, { message: "Please select a hotel." }),
   ratings: z.record(z.number().min(1).max(5)),
   comments: z.string().min(10, { message: "Please provide more detailed feedback." }),
 });
 
 const FeedbackPage = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const hotelIdParam = searchParams.get('hotel');
+  const [hotels, setHotels] = useState<Hotel[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   
   const form = useForm<z.infer<typeof FeedbackFormSchema>>({
     resolver: zodResolver(FeedbackFormSchema),
@@ -56,10 +70,33 @@ const FeedbackPage = () => {
       email: "",
       roomNumber: "",
       stayDate: "",
+      hotelId: hotelIdParam || "",
       ratings: {},
       comments: "",
     },
   });
+
+  useEffect(() => {
+    const fetchHotels = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("hotels")
+          .select("id, name")
+          .order("name");
+
+        if (error) throw error;
+        setHotels(data || []);
+      } catch (error: any) {
+        toast({
+          title: "Error loading hotels",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchHotels();
+  }, [toast]);
 
   const handleStarClick = (categoryId: string, rating: number) => {
     setSelectedRatings((prev) => ({
@@ -76,30 +113,65 @@ const FeedbackPage = () => {
   const onSubmit = async (data: z.infer<typeof FeedbackFormSchema>) => {
     setIsSubmitting(true);
     
-    // Simulate API call
     try {
-      // In a real app, you would submit to an API here
-      console.log("Submitted feedback data:", data);
-      
-      setTimeout(() => {
-        setIsSubmitting(false);
-        form.reset();
-        setSelectedRatings({});
-        
-        toast({
-          title: "Feedback Submitted",
-          description: "Thank you for your valuable feedback!",
+      // Insert feedback into Supabase
+      const { error } = await supabase
+        .from("feedback")
+        .insert({
+          name: data.name,
+          email: data.email,
+          room_number: data.roomNumber,
+          stay_date: data.stayDate,
+          hotel_id: data.hotelId,
+          ratings: data.ratings,
+          comments: data.comments,
         });
-      }, 1500);
-    } catch (error) {
+
+      if (error) throw error;
+      
+      setIsSuccess(true);
+      form.reset();
+      setSelectedRatings({});
+      
+      toast({
+        title: "Feedback Submitted",
+        description: "Thank you for your valuable feedback!",
+      });
+      
+      // Redirect to the hotel page after 2 seconds
+      setTimeout(() => {
+        navigate(`/hotels/${data.hotelId}`);
+      }, 2000);
+    } catch (error: any) {
       setIsSubmitting(false);
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your feedback. Please try again.",
+        description: error.message || "There was an error submitting your feedback. Please try again.",
         variant: "destructive",
       });
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="container-custom section-padding fade-in">
+        <div className="max-w-3xl mx-auto">
+          <Card className="shadow-md text-center py-8">
+            <CardContent className="flex flex-col items-center justify-center pt-6">
+              <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+              <h2 className="font-playfair text-2xl font-bold mb-2">Feedback Submitted</h2>
+              <p className="text-muted-foreground mb-6">
+                Thank you for sharing your experience! Your feedback is valuable to us.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Redirecting you back to the hotel page...
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-custom section-padding fade-in">
@@ -155,6 +227,35 @@ const FeedbackPage = () => {
 
                   <FormField
                     control={form.control}
+                    name="hotelId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hotel</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a hotel" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {hotels.map((hotel) => (
+                              <SelectItem key={hotel.id} value={hotel.id}>
+                                {hotel.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="roomNumber"
                     render={({ field }) => (
                       <FormItem>
@@ -166,21 +267,21 @@ const FeedbackPage = () => {
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="stayDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Stay Date (Optional)</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="stayDate"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Stay Date (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="space-y-4">
                   <FormLabel>Ratings</FormLabel>

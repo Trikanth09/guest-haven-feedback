@@ -29,6 +29,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/context/AuthContext";
 
 // Using a simplified hotel type for the dropdown
 type HotelBasic = {
@@ -62,6 +63,7 @@ const FeedbackPage = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const hotelIdParam = searchParams.get('hotel');
   const [hotels, setHotels] = useState<HotelBasic[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<Record<string, number>>({});
@@ -71,8 +73,8 @@ const FeedbackPage = () => {
   const form = useForm<z.infer<typeof FeedbackFormSchema>>({
     resolver: zodResolver(FeedbackFormSchema),
     defaultValues: {
-      name: "",
-      email: "",
+      name: user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : "",
+      email: user?.email || "",
       roomNumber: "",
       stayDate: "",
       hotelId: hotelIdParam || "",
@@ -80,6 +82,16 @@ const FeedbackPage = () => {
       comments: "",
     },
   });
+
+  // Update form values when user changes
+  useEffect(() => {
+    if (user) {
+      form.setValue('name', user.user_metadata?.first_name ? 
+        `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}` : 
+        form.getValues().name);
+      form.setValue('email', user.email || form.getValues().email);
+    }
+  }, [user, form]);
 
   useEffect(() => {
     const fetchHotels = async () => {

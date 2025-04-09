@@ -14,25 +14,55 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp } = useAuth();
+  
+  // Register form state
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!agreeTerms) {
+      toast({
+        title: "Terms Agreement Required",
+        description: "You must agree to the terms of service",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
-    // Simulate API registration
-    setTimeout(() => {
-      setIsLoading(false);
+    const { error } = await signUp(email, password, firstName, lastName);
+    
+    setIsLoading(false);
+    if (!error) {
       toast({
-        title: "Registration successful",
-        description: "Welcome to GuestHaven! You can now submit feedback.",
+        title: "Registration Successful",
+        description: "Please check your email to confirm your account.",
       });
-      navigate("/feedback");
-    }, 1500);
+      navigate("/login");
+    }
   };
 
   return (
@@ -52,30 +82,66 @@ const RegisterPage = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="first-name">First Name</Label>
-                      <Input id="first-name" placeholder="John" required />
+                      <Input 
+                        id="first-name" 
+                        placeholder="John" 
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="last-name">Last Name</Label>
-                      <Input id="last-name" placeholder="Doe" required />
+                      <Input 
+                        id="last-name" 
+                        placeholder="Doe" 
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required 
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="your.email@example.com" required />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="your.email@example.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" required />
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required 
+                    />
                     <p className="text-xs text-muted-foreground">
                       Password must be at least 8 characters long
                     </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirm Password</Label>
-                    <Input id="confirm-password" type="password" required />
+                    <Input 
+                      id="confirm-password" 
+                      type="password" 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required 
+                    />
                   </div>
                   <div className="flex items-start space-x-2">
-                    <Checkbox id="terms" className="mt-1" />
+                    <Checkbox 
+                      id="terms" 
+                      className="mt-1" 
+                      checked={agreeTerms}
+                      onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
+                    />
                     <label
                       htmlFor="terms"
                       className="text-sm leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70"

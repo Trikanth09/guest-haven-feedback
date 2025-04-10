@@ -129,7 +129,6 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
     setIsSubmitting(true);
     
     try {
-      // Enhanced to include user_id when available
       const feedbackData = {
         name: data.name,
         email: data.email,
@@ -138,9 +137,11 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
         hotel_id: data.hotelId,
         ratings: data.ratings,
         comments: data.comments,
-        // Store the authenticated user ID if available
+        // Always store the authenticated user ID when available
         user_id: user?.id
       };
+
+      console.log("Submitting feedback with user_id:", feedbackData.user_id);
 
       const { error } = await supabase
         .from('feedback')

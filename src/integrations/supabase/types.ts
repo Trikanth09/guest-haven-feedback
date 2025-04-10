@@ -21,6 +21,7 @@ export type Database = {
           room_number: string | null
           status: string | null
           stay_date: string | null
+          user_id: string | null
         }
         Insert: {
           comments: string
@@ -33,6 +34,7 @@ export type Database = {
           room_number?: string | null
           status?: string | null
           stay_date?: string | null
+          user_id?: string | null
         }
         Update: {
           comments?: string
@@ -45,6 +47,7 @@ export type Database = {
           room_number?: string | null
           status?: string | null
           stay_date?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {

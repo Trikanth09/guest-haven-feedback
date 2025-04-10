@@ -130,17 +130,22 @@ const FeedbackPage = () => {
     setIsSubmitting(true);
     
     try {
+      // Enhanced to include user_id when available
+      const feedbackData = {
+        name: data.name,
+        email: data.email,
+        room_number: data.roomNumber,
+        stay_date: data.stayDate,
+        hotel_id: data.hotelId,
+        ratings: data.ratings,
+        comments: data.comments,
+        // Store the authenticated user ID if available
+        user_id: user?.id
+      };
+
       const { error } = await supabase
         .from('feedback')
-        .insert({
-          name: data.name,
-          email: data.email,
-          room_number: data.roomNumber,
-          stay_date: data.stayDate,
-          hotel_id: data.hotelId,
-          ratings: data.ratings,
-          comments: data.comments,
-        });
+        .insert(feedbackData);
 
       if (error) throw error;
       

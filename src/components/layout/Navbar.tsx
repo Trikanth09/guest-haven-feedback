@@ -54,15 +54,20 @@ const Navbar = () => {
           </div>
           <div className="flex items-center space-x-4">
             {user ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleSignOut}
-                className="flex items-center space-x-2"
-              >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </Button>
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-muted-foreground hidden sm:block">
+                  {user.email}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2"
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </Button>
+              </div>
             ) : (
               <>
                 <Link to="/login">
@@ -108,15 +113,20 @@ const Navbar = () => {
           ))}
           <div className="flex flex-col space-y-2 pt-2 border-t">
             {user ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full flex items-center justify-center space-x-2"
-                onClick={handleSignOut}
-              >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </Button>
+              <>
+                <div className="text-sm text-muted-foreground py-2">
+                  {user.email}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full flex items-center justify-center space-x-2"
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </Button>
+              </>
             ) : (
               <>
                 <Link to="/login" onClick={() => setIsMenuOpen(false)}>

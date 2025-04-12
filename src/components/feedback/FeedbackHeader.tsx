@@ -7,14 +7,14 @@ const FeedbackHeader = () => {
   
   return (
     <div className="text-center mb-10">
-      <h1 className="font-playfair text-3xl md:text-4xl font-bold text-hotel-navy mb-4">
+      <h1 className="font-playfair text-3xl md:text-4xl font-bold text-hotel-navy dark:text-white mb-4">
         Share Your Experience
       </h1>
-      <p className="text-muted-foreground mb-2">
+      <p className="text-muted-foreground mb-2 dark:text-gray-300">
         We value your feedback to continuously improve our services and exceed your expectations.
       </p>
       {user && (
-        <p className="text-sm text-primary mt-2">
+        <p className="text-sm text-primary mt-2 dark:text-hotel-gold">
           Your feedback will be submitted as {user.email}
         </p>
       )}

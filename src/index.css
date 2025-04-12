@@ -39,14 +39,14 @@
   }
 
   .dark {
-    --background: 222 47% 11.2%;
-    --foreground: 210 40% 98%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 222 47% 11.2%;
-    --card-foreground: 210 40% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222 47% 11.2%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
 
     --primary: 210 40% 98%;
     --primary-foreground: 222 47% 11.2%;
@@ -74,7 +74,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
     font-family: 'Inter', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -98,7 +98,7 @@
   }
 
   .page-title {
-    @apply text-3xl md:text-4xl lg:text-5xl font-bold text-primary;
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold text-primary dark:text-white;
   }
 
   .fade-in {

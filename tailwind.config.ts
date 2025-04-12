@@ -63,7 +63,7 @@ export default {
           cream: '#f8f5f0',
           lightgray: '#f1f1f1',
           softblue: '#a8c7dc',
-          charcoal: '#333333'
+          charcoal: '#222222'
         },
       },
       borderRadius: {

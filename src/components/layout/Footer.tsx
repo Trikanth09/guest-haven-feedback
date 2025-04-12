@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-hotel-navy text-white pt-12 pb-6">
+    <footer className="bg-hotel-navy dark:bg-hotel-charcoal text-white pt-12 pb-6 transition-colors duration-300">
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
@@ -43,8 +43,8 @@ const Footer = () => {
             <h4 className="font-semibold mb-4">For Hotels</h4>
             <ul className="space-y-2 text-sm text-gray-300">
               <li>
-                <Link to="/admin" className="hover:text-hotel-gold transition-colors">
-                  Admin Login
+                <Link to="/admin/dashboard" className="hover:text-hotel-gold transition-colors">
+                  Admin Dashboard
                 </Link>
               </li>
               <li>
@@ -63,13 +63,11 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li>trikanth09@gmail.com</li>
-              <li>+91 9963673767</li>
-              <li>+91 8838035389</li>
-              <li>+91 9966976111</li>
-              <li>SRM University, TechPark 2</li>
-              <li>Potheri, Kattankulathur</li>
-              <li>Chennai, Tamil Nadu 603203</li>
+              <li>contact@guesthaven.com</li>
+              <li>+1 (555) 123-4567</li>
+              <li>123 Hospitality Way</li>
+              <li>Suite 456</li>
+              <li>Hotel District, HD 12345</li>
             </ul>
           </div>
         </div>

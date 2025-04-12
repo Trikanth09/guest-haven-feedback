@@ -1,3 +1,4 @@
+
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FeedbackItem } from '@/types/feedback';
@@ -7,29 +8,33 @@ interface AutoTableResult {
   finalY: number;
 }
 
-// Define type for jsPDF's internal object to avoid conflicts
-interface JsPDFInternal {
-  getNumberOfPages: () => number;
-  pageSize: { 
-    width: number; 
-    getWidth: () => number; 
-    height: number; 
-    getHeight: () => number; 
-  };
-  events: any; // PubSub events
-  scaleFactor: number;
-  pages: number[];
-  getEncryptor(objectId: number): (data: string) => string;
+// Define a single consistent internal interface
+interface PubSub {
+  subscribe: (event: string, callback: Function) => void;
+  unsubscribe: (event: string, callback: Function) => void;
+  publish: (event: string, ...args: any[]) => void;
 }
 
-// Extend jsPDF to include autoTable functionality
+// Extend jsPDF to include autoTable functionality and internal properties
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: {
       (options: any): jsPDF;
       previous?: AutoTableResult;
     };
-    internal: JsPDFInternal;
+    internal: {
+      getNumberOfPages: () => number;
+      pageSize: { 
+        width: number; 
+        getWidth: () => number; 
+        height: number; 
+        getHeight: () => number; 
+      };
+      events: PubSub;
+      scaleFactor: number;
+      pages: number[];
+      getEncryptor(objectId: number): (data: string) => string;
+    };
   }
 }
 

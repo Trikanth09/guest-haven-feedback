@@ -8,8 +8,8 @@ interface AutoTableResult {
   finalY: number;
 }
 
-// Define a properly typed interface for the internal property
-interface Internal {
+// Define a type for jsPDF internal object
+interface JsPDFInternal {
   getNumberOfPages: () => number;
   pageSize: { 
     width: number; 
@@ -30,7 +30,7 @@ declare module 'jspdf' {
       (options: any): jsPDF;
       previous?: AutoTableResult;
     };
-    internal: Internal;
+    internal: JsPDFInternal;
   }
 }
 

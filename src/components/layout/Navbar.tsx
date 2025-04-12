@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -52,6 +52,20 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            
+            {isAdmin && (
+              <Link
+                to="/admin/dashboard"
+                className={`text-sm font-medium transition-colors hover:text-primary dark:hover:text-hotel-gold flex items-center ${
+                  isActive("/admin/dashboard")
+                    ? "text-primary dark:text-hotel-gold border-b-2 border-hotel-gold"
+                    : "text-muted-foreground dark:text-gray-300"
+                }`}
+              >
+                <Shield className="w-4 h-4 mr-1" />
+                Admin
+              </Link>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
@@ -80,6 +94,12 @@ const Navbar = () => {
                 <Link to="/register">
                   <Button variant="default" size="sm">
                     Register
+                  </Button>
+                </Link>
+                <Link to="/admin/login">
+                  <Button variant="outline" size="sm" className="flex items-center space-x-1 dark:border-gray-600 dark:hover:bg-gray-700">
+                    <Shield size={16} />
+                    <span>Admin</span>
                   </Button>
                 </Link>
               </>
@@ -116,6 +136,22 @@ const Navbar = () => {
               {link.name}
             </Link>
           ))}
+          
+          {isAdmin && (
+            <Link
+              to="/admin/dashboard"
+              className={`block py-2 text-sm font-medium flex items-center ${
+                isActive("/admin/dashboard")
+                  ? "text-primary dark:text-hotel-gold"
+                  : "text-muted-foreground dark:text-gray-300"
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Shield className="w-4 h-4 mr-1" />
+              Admin Dashboard
+            </Link>
+          )}
+          
           <div className="flex flex-col space-y-2 pt-2 border-t dark:border-gray-800">
             {user ? (
               <>
@@ -142,6 +178,12 @@ const Navbar = () => {
                 <Link to="/register" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="default" size="sm" className="w-full">
                     Register
+                  </Button>
+                </Link>
+                <Link to="/admin/login" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full flex items-center justify-center space-x-1 dark:border-gray-600 dark:hover:bg-gray-700">
+                    <Shield size={16} />
+                    <span>Admin</span>
                   </Button>
                 </Link>
               </>

@@ -32,7 +32,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Search, Calendar, Filter, Star, Download, FileDown, Printer, RefreshCw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { FeedbackItem, FeedbackFilterOptions } from "@/types/feedback";
+import { FeedbackItem, FeedbackFilterOptions, FeedbackRatings } from "@/types/feedback";
 import { toast } from "@/hooks/use-toast";
 import { generateFeedbackPDF, generateBulkFeedbackPDF } from "@/utils/pdfGenerator";
 
@@ -84,8 +84,25 @@ const AdminDashboard = () => {
         throw error;
       }
       
-      setFeedback(data || []);
-      setFilteredFeedback(data || []);
+      // Transform the data to ensure ratings are properly typed
+      const typedFeedback: FeedbackItem[] = (data || []).map(item => ({
+        ...item,
+        ratings: item.ratings as unknown as FeedbackRatings,
+        // Ensure all required properties have values
+        id: item.id,
+        name: item.name,
+        email: item.email,
+        comments: item.comments,
+        created_at: item.created_at,
+        hotel_id: item.hotel_id,
+        room_number: item.room_number,
+        stay_date: item.stay_date,
+        status: item.status || 'new',
+        user_id: item.user_id
+      }));
+      
+      setFeedback(typedFeedback);
+      setFilteredFeedback(typedFeedback);
     } catch (error) {
       console.error('Error fetching feedback:', error);
       toast({

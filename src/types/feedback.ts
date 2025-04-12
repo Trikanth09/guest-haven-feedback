@@ -7,6 +7,7 @@ export interface FeedbackRatings {
   value: number;
   food?: number;
   location?: number;
+  [key: string]: number | undefined; // Allow for additional rating categories
 }
 
 export interface FeedbackItem {

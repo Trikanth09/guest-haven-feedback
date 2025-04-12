@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FeedbackItem } from '@/types/feedback';
@@ -7,6 +6,30 @@ import { FeedbackItem } from '@/types/feedback';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
+  }
+}
+
+// Add a custom property to the jsPDF type for accessing previous table information
+interface AutoTableResult {
+  finalY: number;
+}
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: {
+      (options: any): jsPDF;
+      previous?: AutoTableResult;
+    };
+    internal: {
+      getNumberOfPages: () => number;
+      pageSize: { 
+        width: number; 
+        getWidth: () => number; 
+        height: number; 
+        getHeight: () => number; 
+      };
+      // Other properties
+    };
   }
 }
 
@@ -56,15 +79,18 @@ export const generateFeedbackPDF = (feedback: FeedbackItem, companyName = 'Guest
     headStyles: { fillColor: [30, 58, 138] },
   });
   
+  // Calculate next Y position using the previous table's finalY
+  const finalY1 = doc.autoTable.previous?.finalY || 120;
+  
   // Add ratings
-  doc.text('Ratings', 20, doc.autoTable.previous.finalY + 15);
+  doc.text('Ratings', 20, finalY1 + 15);
   
   const ratingsArray = Object.entries(feedback.ratings).map(([category, rating]) => {
     return [category.charAt(0).toUpperCase() + category.slice(1), rating];
   });
   
   doc.autoTable({
-    startY: doc.autoTable.previous.finalY + 20,
+    startY: finalY1 + 20,
     head: [['Category', 'Rating (out of 5)']],
     body: ratingsArray,
     theme: 'grid',
@@ -72,14 +98,17 @@ export const generateFeedbackPDF = (feedback: FeedbackItem, companyName = 'Guest
     headStyles: { fillColor: [30, 58, 138] },
   });
   
+  // Calculate next Y position using the previous table's finalY
+  const finalY2 = doc.autoTable.previous?.finalY || 180;
+  
   // Add comments
-  doc.text('Comments', 20, doc.autoTable.previous.finalY + 15);
+  doc.text('Comments', 20, finalY2 + 15);
   
   doc.setFontSize(10);
   doc.setTextColor(60, 60, 60);
   
   const textLines = doc.splitTextToSize(feedback.comments, 170);
-  doc.text(textLines, 20, doc.autoTable.previous.finalY + 25);
+  doc.text(textLines, 20, finalY2 + 25);
   
   // Add footer
   const pageCount = doc.internal.getNumberOfPages();

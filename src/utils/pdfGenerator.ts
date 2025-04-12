@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FeedbackItem } from '@/types/feedback';
@@ -8,7 +7,7 @@ interface AutoTableResult {
   finalY: number;
 }
 
-// Define a type for internal PubSub events
+// Define a type for internal jsPDF events
 type PubSub = any;
 
 // Define a complete type for jsPDF to avoid conflicts

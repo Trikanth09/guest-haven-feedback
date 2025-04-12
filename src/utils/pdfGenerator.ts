@@ -15,7 +15,7 @@ interface PubSub {
   publish: (event: string, ...args: any[]) => void;
 }
 
-// Extend jsPDF to include autoTable functionality and internal properties
+// Extend jsPDF to include autoTable functionality
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: {

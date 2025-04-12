@@ -8,8 +8,10 @@ interface AutoTableResult {
   finalY: number;
 }
 
-// Define a more complete type for jsPDF to avoid type conflicts
-// This creates a single declaration that includes all needed properties
+// Define a type for internal PubSub events
+type PubSub = any;
+
+// Define a complete type for jsPDF to avoid conflicts
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: {
@@ -24,7 +26,7 @@ declare module 'jspdf' {
         height: number; 
         getHeight: () => number; 
       };
-      events: any;
+      events: PubSub;
       scaleFactor: number;
       pages: number[];
       getEncryptor(objectId: number): (data: string) => string;

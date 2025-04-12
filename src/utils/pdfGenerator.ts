@@ -1,19 +1,15 @@
+
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FeedbackItem } from '@/types/feedback';
 
-// Add typing for the jsPDF autotable plugin
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
-
-// Add a custom property to the jsPDF type for accessing previous table information
+// Define the AutoTableResult interface for table positioning
 interface AutoTableResult {
   finalY: number;
 }
 
+// Define a more complete type for jsPDF to avoid type conflicts
+// This creates a single declaration that includes all needed properties
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: {
@@ -28,7 +24,10 @@ declare module 'jspdf' {
         height: number; 
         getHeight: () => number; 
       };
-      // Other properties
+      events: any;
+      scaleFactor: number;
+      pages: number[];
+      getEncryptor(objectId: number): (data: string) => string;
     };
   }
 }

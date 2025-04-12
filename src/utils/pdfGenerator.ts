@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FeedbackItem } from '@/types/feedback';
@@ -8,7 +7,7 @@ interface AutoTableResult {
   finalY: number;
 }
 
-// Define a type for jsPDF internal object
+// Define type for jsPDF's internal object to avoid conflicts
 interface JsPDFInternal {
   getNumberOfPages: () => number;
   pageSize: { 
@@ -23,7 +22,7 @@ interface JsPDFInternal {
   getEncryptor(objectId: number): (data: string) => string;
 }
 
-// Define a complete type for jsPDF to avoid conflicts
+// Extend jsPDF to include autoTable functionality
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: {

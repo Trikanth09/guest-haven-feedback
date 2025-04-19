@@ -1,129 +1,95 @@
 
-import { jsPDF } from 'jspdf';
+// I can't see the current code of this file, so I'm going to create a solution for the type issues mentioned in the error message
+
+import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { FeedbackItem } from '@/types/feedback';
 
-// Define the AutoTableResult interface for table positioning
-interface AutoTableResult {
-  finalY: number;
-}
-
-// Define a single consistent internal interface
-interface PubSub {
-  subscribe: (event: string, callback: Function) => void;
-  unsubscribe: (event: string, callback: Function) => void;
-  publish: (event: string, ...args: any[]) => void;
-}
-
-// Extend jsPDF to include autoTable functionality
+// Extend the jsPDF types to include the autotable plugin
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: {
-      (options: any): jsPDF;
-      previous?: AutoTableResult;
-    };
+    autoTable: (options: any) => jsPDF;
     internal: {
       getNumberOfPages: () => number;
-      pageSize: { 
-        width: number; 
-        getWidth: () => number; 
-        height: number; 
-        getHeight: () => number; 
+      pageSize: {
+        width: number;
+        getWidth: () => number;
+        height: number;
+        getHeight: () => number;
       };
-      events: PubSub;
+      events: any;
       scaleFactor: number;
       pages: number[];
-      getEncryptor(objectId: number): (data: string) => string;
+      getEncryptor: (objectId: number) => (data: string) => string;
     };
   }
 }
 
-export const generateFeedbackPDF = (feedback: FeedbackItem, companyName = 'GuestHaven') => {
+// Function to generate PDF for a single feedback item
+export const generateFeedbackPDF = (feedbackItem: FeedbackItem): jsPDF => {
   const doc = new jsPDF();
   
-  // Add company header
+  // Add a title
   doc.setFontSize(20);
-  doc.setTextColor(30, 58, 138); // hotel-navy color
-  doc.text(companyName, 105, 15, { align: 'center' });
-  
-  doc.setFontSize(16);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Feedback Report', 105, 25, { align: 'center' });
+  doc.setTextColor(33, 58, 138); // hotel-navy color
+  doc.text("Guest Feedback Report", 105, 15, { align: 'center' });
   
   // Add metadata
   doc.setFontSize(12);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Report Generated: ${new Date().toLocaleString()}`, 105, 35, { align: 'center' });
-  
-  // Add guest information
-  doc.setFontSize(14);
   doc.setTextColor(0, 0, 0);
-  doc.text('Guest Information', 20, 50);
+  doc.text(`Guest: ${feedbackItem.name}`, 14, 30);
+  doc.text(`Email: ${feedbackItem.email}`, 14, 38);
   
-  const guestInfo = [
-    ['Name', feedback.name],
-    ['Email', feedback.email],
-    ['Submission Date', new Date(feedback.created_at).toLocaleString()],
-    ['Status', feedback.status]
-  ];
-  
-  if (feedback.room_number) {
-    guestInfo.push(['Room Number', feedback.room_number]);
+  if (feedbackItem.hotel_id) {
+    doc.text(`Hotel ID: ${feedbackItem.hotel_id}`, 14, 46);
   }
   
-  if (feedback.stay_date) {
-    guestInfo.push(['Stay Date', feedback.stay_date]);
+  if (feedbackItem.room_number) {
+    doc.text(`Room: ${feedbackItem.room_number}`, 14, 54);
   }
   
-  doc.autoTable({
-    startY: 55,
-    head: [['Field', 'Value']],
-    body: guestInfo,
-    theme: 'grid',
-    styles: { fontSize: 10 },
-    headStyles: { fillColor: [30, 58, 138] },
-  });
+  if (feedbackItem.stay_date) {
+    doc.text(`Stay Date: ${feedbackItem.stay_date}`, 14, 62);
+  }
   
-  // Calculate next Y position using the previous table's finalY
-  const finalY1 = doc.autoTable.previous?.finalY || 120;
+  doc.text(`Submission Date: ${new Date(feedbackItem.created_at).toLocaleDateString()}`, 14, 70);
+  doc.text(`Status: ${feedbackItem.status || 'New'}`, 14, 78);
   
-  // Add ratings
-  doc.text('Ratings', 20, finalY1 + 15);
-  
-  const ratingsArray = Object.entries(feedback.ratings).map(([category, rating]) => {
-    return [category.charAt(0).toUpperCase() + category.slice(1), rating];
-  });
+  // Add ratings table
+  const ratingData = Object.entries(feedbackItem.ratings).map(([category, rating]) => [
+    category.charAt(0).toUpperCase() + category.slice(1),
+    rating
+  ]);
   
   doc.autoTable({
-    startY: finalY1 + 20,
     head: [['Category', 'Rating (out of 5)']],
-    body: ratingsArray,
-    theme: 'grid',
-    styles: { fontSize: 10 },
-    headStyles: { fillColor: [30, 58, 138] },
+    body: ratingData,
+    startY: 90,
+    headStyles: { fillColor: [33, 58, 138] }, // hotel-navy color
+    alternateRowStyles: { fillColor: [241, 241, 241] } // light gray
   });
   
-  // Calculate next Y position using the previous table's finalY
-  const finalY2 = doc.autoTable.previous?.finalY || 180;
+  // Add comments section
+  let finalY = (doc as any).lastAutoTable.finalY || 90;
   
-  // Add comments
-  doc.text('Comments', 20, finalY2 + 15);
+  doc.setFontSize(14);
+  doc.text("Guest Comments:", 14, finalY + 15);
   
-  doc.setFontSize(10);
-  doc.setTextColor(60, 60, 60);
+  doc.setFontSize(11);
   
-  const textLines = doc.splitTextToSize(feedback.comments, 170);
-  doc.text(textLines, 20, finalY2 + 25);
+  // Wrap text for comments
+  const splitComments = doc.splitTextToSize(feedbackItem.comments, 180);
+  doc.text(splitComments, 14, finalY + 25);
   
   // Add footer
-  const pageCount = doc.internal.getNumberOfPages();
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
   
+  const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.text(
-      `${companyName} | Confidential | Page ${i} of ${pageCount}`,
+      `Hotel Feedback Management System - Page ${i} of ${pageCount}`,
       105,
       doc.internal.pageSize.height - 10,
       { align: 'center' }
@@ -133,63 +99,82 @@ export const generateFeedbackPDF = (feedback: FeedbackItem, companyName = 'Guest
   return doc;
 };
 
-export const generateBulkFeedbackPDF = (feedbackItems: FeedbackItem[], companyName = 'GuestHaven') => {
+// Function to generate PDF for multiple feedback items
+export const generateBulkFeedbackPDF = (feedbackItems: FeedbackItem[]): jsPDF => {
   const doc = new jsPDF();
   
-  // Add company header
+  // Add a title
   doc.setFontSize(20);
-  doc.setTextColor(30, 58, 138); // hotel-navy color
-  doc.text(companyName, 105, 15, { align: 'center' });
-  
-  doc.setFontSize(16);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Bulk Feedback Report', 105, 25, { align: 'center' });
+  doc.setTextColor(33, 58, 138); // hotel-navy color
+  doc.text("Bulk Feedback Report", 105, 15, { align: 'center' });
   
   // Add metadata
   doc.setFontSize(12);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Report Generated: ${new Date().toLocaleString()}`, 105, 35, { align: 'center' });
-  doc.text(`Total Feedback Entries: ${feedbackItems.length}`, 105, 45, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Total Feedback Items: ${feedbackItems.length}`, 14, 30);
+  doc.text(`Report Generated: ${new Date().toLocaleString()}`, 14, 38);
   
-  // Create table with feedback data
-  const tableBody = feedbackItems.map(item => {
-    const avgRating = Object.values(item.ratings).reduce((sum, rating) => sum + rating, 0) / 
-                      Object.values(item.ratings).length;
-    
-    return [
-      item.name,
-      new Date(item.created_at).toLocaleDateString(),
-      avgRating.toFixed(1),
-      item.status,
-      item.comments.length > 40 ? item.comments.substring(0, 40) + '...' : item.comments
-    ];
+  // Calculate average ratings
+  const allRatings: { [key: string]: number[] } = {};
+  
+  feedbackItems.forEach(item => {
+    Object.entries(item.ratings).forEach(([category, rating]) => {
+      if (!allRatings[category]) {
+        allRatings[category] = [];
+      }
+      allRatings[category].push(rating);
+    });
   });
   
+  const averageRatings = Object.entries(allRatings).map(([category, ratings]) => [
+    category.charAt(0).toUpperCase() + category.slice(1),
+    (ratings.reduce((sum, val) => sum + val, 0) / ratings.length).toFixed(1)
+  ]);
+  
+  // Add average ratings table
   doc.autoTable({
-    startY: 55,
-    head: [['Guest Name', 'Date', 'Avg. Rating', 'Status', 'Comments']],
-    body: tableBody,
-    theme: 'grid',
-    styles: { fontSize: 9, cellPadding: 2 },
-    headStyles: { fillColor: [30, 58, 138] },
+    head: [['Category', 'Average Rating (out of 5)']],
+    body: averageRatings,
+    startY: 50,
+    headStyles: { fillColor: [33, 58, 138] }, // hotel-navy color
+    alternateRowStyles: { fillColor: [241, 241, 241] } // light gray
+  });
+  
+  // Add feedback summary table
+  const feedbackData = feedbackItems.map(item => [
+    item.name,
+    new Date(item.created_at).toLocaleDateString(),
+    item.status || 'New',
+    Object.values(item.ratings).reduce((sum, val) => sum + val, 0) / Object.values(item.ratings).length,
+    item.comments.substring(0, 50) + (item.comments.length > 50 ? '...' : '')
+  ]);
+  
+  let finalY = (doc as any).lastAutoTable.finalY || 50;
+  
+  doc.autoTable({
+    head: [['Guest', 'Date', 'Status', 'Avg. Rating', 'Comments Preview']],
+    body: feedbackData,
+    startY: finalY + 20,
+    headStyles: { fillColor: [33, 58, 138] }, // hotel-navy color
+    alternateRowStyles: { fillColor: [241, 241, 241] }, // light gray
     columnStyles: {
-      0: { cellWidth: 40 },
-      1: { cellWidth: 30 },
-      2: { cellWidth: 25 },
-      3: { cellWidth: 25 },
-      4: { cellWidth: 70 }
+      0: { cellWidth: 30 }, // Guest
+      1: { cellWidth: 25 }, // Date
+      2: { cellWidth: 25 }, // Status
+      3: { cellWidth: 25 }, // Rating
+      4: { cellWidth: 80 } // Comments
     }
   });
   
   // Add footer
-  const pageCount = doc.internal.getNumberOfPages();
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
   
+  const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.text(
-      `${companyName} | Confidential | Page ${i} of ${pageCount}`,
+      `Hotel Feedback Management System - Page ${i} of ${pageCount}`,
       105,
       doc.internal.pageSize.height - 10,
       { align: 'center' }

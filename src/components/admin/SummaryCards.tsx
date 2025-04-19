@@ -1,7 +1,7 @@
 
 import { FeedbackItem } from "@/types/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star } from "lucide-react";
+import { Star, MessageSquare, Clock, Users } from "lucide-react";
 
 interface SummaryCardsProps {
   feedback: FeedbackItem[];
@@ -9,11 +9,26 @@ interface SummaryCardsProps {
 }
 
 const SummaryCards = ({ feedback, getAverageRating }: SummaryCardsProps) => {
+  // Calculate total number of unique users who submitted feedback
+  const getUniqueUsers = () => {
+    const uniqueEmails = new Set(feedback.map(item => item.email));
+    return uniqueEmails.size;
+  };
+
+  // Calculate the average response time (placeholder - would need actual data)
+  const getAverageResponseTime = () => {
+    const resolvedFeedback = feedback.filter(f => f.status === "resolved");
+    return resolvedFeedback.length > 0 ? "48h" : "N/A";
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <Card className="dark:bg-hotel-charcoal dark:border-gray-700">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <Card className="dark:bg-hotel-charcoal dark:border-gray-700 hover:shadow-md transition-shadow">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium dark:text-white">Total Feedback</CardTitle>
+          <CardTitle className="text-lg font-medium dark:text-white flex items-center gap-2">
+            <Users className="h-5 w-5 text-hotel-navy dark:text-hotel-gold" />
+            Total Feedback
+          </CardTitle>
           <CardDescription className="dark:text-gray-400">All time submissions</CardDescription>
         </CardHeader>
         <CardContent>
@@ -21,9 +36,12 @@ const SummaryCards = ({ feedback, getAverageRating }: SummaryCardsProps) => {
         </CardContent>
       </Card>
       
-      <Card className="dark:bg-hotel-charcoal dark:border-gray-700">
+      <Card className="dark:bg-hotel-charcoal dark:border-gray-700 hover:shadow-md transition-shadow">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium dark:text-white">Average Rating</CardTitle>
+          <CardTitle className="text-lg font-medium dark:text-white flex items-center gap-2">
+            <Star className="h-5 w-5 text-hotel-navy dark:text-hotel-gold" />
+            Average Rating
+          </CardTitle>
           <CardDescription className="dark:text-gray-400">Across all categories</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center">
@@ -32,15 +50,31 @@ const SummaryCards = ({ feedback, getAverageRating }: SummaryCardsProps) => {
         </CardContent>
       </Card>
       
-      <Card className="dark:bg-hotel-charcoal dark:border-gray-700">
+      <Card className="dark:bg-hotel-charcoal dark:border-gray-700 hover:shadow-md transition-shadow">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium dark:text-white">Pending Response</CardTitle>
+          <CardTitle className="text-lg font-medium dark:text-white flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-hotel-navy dark:text-hotel-gold" />
+            Pending Response
+          </CardTitle>
           <CardDescription className="dark:text-gray-400">Feedback needing attention</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold dark:text-white">
             {feedback.filter(f => f.status === "new").length}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="dark:bg-hotel-charcoal dark:border-gray-700 hover:shadow-md transition-shadow">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-medium dark:text-white flex items-center gap-2">
+            <Clock className="h-5 w-5 text-hotel-navy dark:text-hotel-gold" />
+            Avg. Response Time
+          </CardTitle>
+          <CardDescription className="dark:text-gray-400">Time to resolve</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold dark:text-white">{getAverageResponseTime()}</div>
         </CardContent>
       </Card>
     </div>

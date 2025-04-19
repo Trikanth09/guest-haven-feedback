@@ -1,6 +1,4 @@
 
-// I can't see the current code of this file, so I'm going to create a solution for the type issues mentioned in the error message
-
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { FeedbackItem } from '@/types/feedback';
@@ -10,17 +8,20 @@ declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
     internal: {
-      getNumberOfPages: () => number;
+      events: any;
+      scaleFactor: number;
       pageSize: {
         width: number;
         getWidth: () => number;
         height: number;
         getHeight: () => number;
       };
-      events: any;
-      scaleFactor: number;
       pages: number[];
       getEncryptor: (objectId: number) => (data: string) => string;
+      getNumberOfPages: () => number; // Added this missing property
+    };
+    lastAutoTable?: {
+      finalY: number;
     };
   }
 }
@@ -70,7 +71,7 @@ export const generateFeedbackPDF = (feedbackItem: FeedbackItem): jsPDF => {
   });
   
   // Add comments section
-  let finalY = (doc as any).lastAutoTable.finalY || 90;
+  let finalY = doc.lastAutoTable?.finalY || 90;
   
   doc.setFontSize(14);
   doc.text("Guest Comments:", 14, finalY + 15);
@@ -149,7 +150,7 @@ export const generateBulkFeedbackPDF = (feedbackItems: FeedbackItem[]): jsPDF =>
     item.comments.substring(0, 50) + (item.comments.length > 50 ? '...' : '')
   ]);
   
-  let finalY = (doc as any).lastAutoTable.finalY || 50;
+  let finalY = doc.lastAutoTable?.finalY || 50;
   
   doc.autoTable({
     head: [['Guest', 'Date', 'Status', 'Avg. Rating', 'Comments Preview']],

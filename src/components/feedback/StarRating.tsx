@@ -1,6 +1,6 @@
 
 import { Star } from "lucide-react";
-import { useState } from "react";
+import { memo } from "react";
 
 interface StarRatingProps {
   categoryId: string;
@@ -9,7 +9,8 @@ interface StarRatingProps {
   onRatingChange: (categoryId: string, rating: number) => void;
 }
 
-const StarRating = ({ categoryId, categoryName, selectedRating, onRatingChange }: StarRatingProps) => {
+// Use memo to prevent unnecessary re-renders
+const StarRating = memo(({ categoryId, categoryName, selectedRating, onRatingChange }: StarRatingProps) => {
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
@@ -19,10 +20,10 @@ const StarRating = ({ categoryId, categoryName, selectedRating, onRatingChange }
             <Star
               key={star}
               size={20}
-              className={`cursor-pointer ${
+              className={`cursor-pointer transition-colors ${
                 selectedRating >= star
                   ? "text-hotel-gold fill-hotel-gold"
-                  : "text-gray-300"
+                  : "text-gray-300 hover:text-gray-400"
               }`}
               onClick={() => onRatingChange(categoryId, star)}
             />
@@ -31,6 +32,8 @@ const StarRating = ({ categoryId, categoryName, selectedRating, onRatingChange }
       </div>
     </div>
   );
-};
+});
+
+StarRating.displayName = 'StarRating';
 
 export default StarRating;

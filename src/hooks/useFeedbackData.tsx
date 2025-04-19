@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { FeedbackItem, FeedbackFilterOptions, FeedbackRatings } from "@/types/feedback";
 import { generateFeedbackPDF, generateBulkFeedbackPDF } from "@/utils/pdfGenerator";
@@ -24,21 +24,8 @@ export const useFeedbackData = () => {
     maxRating: 5
   });
 
-  useEffect(() => {
-    fetchFeedback();
-    
-    // Get last backup date from localStorage
-    const backup = localStorage.getItem('lastBackup');
-    if (backup) {
-      setLastBackup(backup);
-    }
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [feedback, filters]);
-
-  const fetchFeedback = async () => {
+  // Use callback to memoize the fetch function
+  const fetchFeedback = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -79,9 +66,20 @@ export const useFeedbackData = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const applyFilters = () => {
+  useEffect(() => {
+    fetchFeedback();
+    
+    // Get last backup date from localStorage
+    const backup = localStorage.getItem('lastBackup');
+    if (backup) {
+      setLastBackup(backup);
+    }
+  }, [fetchFeedback]);
+
+  // Use memo to optimize filtering performance
+  const applyFilters = useCallback(() => {
     let result = [...feedback];
     
     // Apply search filter
@@ -121,9 +119,14 @@ export const useFeedbackData = () => {
     });
     
     setFilteredFeedback(result);
-  };
+  }, [feedback, filters]);
 
-  const resetFilters = () => {
+  // Only re-run filters when feedback or filters change
+  useEffect(() => {
+    applyFilters();
+  }, [feedback, filters, applyFilters]);
+
+  const resetFilters = useCallback(() => {
     setFilters({
       search: '',
       dateFrom: null,
@@ -132,9 +135,9 @@ export const useFeedbackData = () => {
       minRating: 0,
       maxRating: 5
     });
-  };
+  }, []);
 
-  const handleRowSelect = (id: string) => {
+  const handleRowSelect = useCallback((id: string) => {
     setSelectedRows(prev => {
       if (prev.includes(id)) {
         return prev.filter(rowId => rowId !== id);
@@ -142,17 +145,17 @@ export const useFeedbackData = () => {
         return [...prev, id];
       }
     });
-  };
+  }, []);
 
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     if (selectedRows.length === filteredFeedback.length) {
       setSelectedRows([]);
     } else {
       setSelectedRows(filteredFeedback.map(item => item.id));
     }
-  };
+  }, [filteredFeedback, selectedRows.length]);
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const handleUpdateStatus = useCallback(async (id: string, status: string) => {
     try {
       const { error } = await supabase
         .from('feedback')
@@ -182,9 +185,9 @@ export const useFeedbackData = () => {
         description: "Failed to update status. Please try again.",
       });
     }
-  };
+  }, []);
 
-  const exportSingleFeedback = (item: FeedbackItem) => {
+  const exportSingleFeedback = useCallback((item: FeedbackItem) => {
     try {
       const doc = generateFeedbackPDF(item);
       doc.save(`Feedback_${item.id}.pdf`);
@@ -201,9 +204,9 @@ export const useFeedbackData = () => {
         description: "Could not generate the PDF. Please try again.",
       });
     }
-  };
+  }, []);
 
-  const exportSelectedFeedback = () => {
+  const exportSelectedFeedback = useCallback(() => {
     if (selectedRows.length === 0) {
       toast({
         variant: "destructive",
@@ -240,9 +243,9 @@ export const useFeedbackData = () => {
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [feedback, selectedRows, exportSingleFeedback]);
 
-  const backupFeedback = () => {
+  const backupFeedback = useCallback(() => {
     setIsBackingUp(true);
     try {
       // Create a JSON backup
@@ -275,9 +278,10 @@ export const useFeedbackData = () => {
     } finally {
       setIsBackingUp(false);
     }
-  };
+  }, [feedback]);
 
-  const getAverageRating = (feedbackItems: FeedbackItem[]) => {
+  // Memoize the complex calculation
+  const getAverageRating = useCallback((feedbackItems: FeedbackItem[]) => {
     if (feedbackItems.length === 0) return 0;
     
     let total = 0;
@@ -291,7 +295,7 @@ export const useFeedbackData = () => {
     });
     
     return parseFloat((total / count).toFixed(1));
-  };
+  }, []);
 
   return {
     isLoading,

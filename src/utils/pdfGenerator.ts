@@ -7,22 +7,16 @@ import { FeedbackItem } from '@/types/feedback';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
-    internal: {
-      events: any;
-      scaleFactor: number;
-      pageSize: {
-        width: number;
-        getWidth: () => number;
-        height: number;
-        getHeight: () => number;
-      };
-      pages: number[];
-      getEncryptor: (objectId: number) => (data: string) => string;
-      getNumberOfPages: () => number; // Added this missing property
-    };
     lastAutoTable?: {
       finalY: number;
     };
+  }
+}
+
+// Add missing internal properties
+declare global {
+  interface Window {
+    jspdf: any;
   }
 }
 
@@ -86,13 +80,13 @@ export const generateFeedbackPDF = (feedbackItem: FeedbackItem): jsPDF => {
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
   
-  const pageCount = doc.internal.getNumberOfPages();
+  const pageCount = (doc.internal as any).getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.text(
       `Hotel Feedback Management System - Page ${i} of ${pageCount}`,
       105,
-      doc.internal.pageSize.height - 10,
+      (doc.internal as any).pageSize.height - 10,
       { align: 'center' }
     );
   }
@@ -171,13 +165,13 @@ export const generateBulkFeedbackPDF = (feedbackItems: FeedbackItem[]): jsPDF =>
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
   
-  const pageCount = doc.internal.getNumberOfPages();
+  const pageCount = (doc.internal as any).getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.text(
       `Hotel Feedback Management System - Page ${i} of ${pageCount}`,
       105,
-      doc.internal.pageSize.height - 10,
+      (doc.internal as any).pageSize.height - 10,
       { align: 'center' }
     );
   }

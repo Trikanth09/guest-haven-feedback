@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import SocialShareButtons from "@/components/feedback/SocialShareButtons";
 
 type Feedback = {
   id: string;
@@ -52,7 +53,7 @@ const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
                       })}
                     </CardDescription>
                   </div>
-                  <div className="flex">
+                  <div className="flex items-center space-x-2">
                     {Object.values(item.ratings).length > 0 && (
                       <div className="flex items-center">
                         <span className="mr-2 font-medium">
@@ -62,6 +63,7 @@ const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
                         <Star className="h-5 w-5 text-hotel-gold fill-hotel-gold" />
                       </div>
                     )}
+                    <SocialShareButtons feedbackItem={item} compact />
                   </div>
                 </div>
               </CardHeader>

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,7 @@ import { FeedbackFormSchema } from "./types/feedbackTypes";
 import UserInfoFields from "./form/UserInfoFields";
 import HotelSelect from "./form/HotelSelect";
 import RatingCategories from "./form/RatingCategories";
+import FileUpload from "./form/FileUpload";
 import { z } from "zod";
 
 interface FeedbackFormProps {
@@ -30,6 +30,7 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
   const [hotels, setHotels] = useState<{ id: string; name: string; }[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
 
   const form = useForm<z.infer<typeof FeedbackFormSchema>>({
     resolver: zodResolver(FeedbackFormSchema),
@@ -84,6 +85,10 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
       ...form.getValues().ratings,
       [categoryId]: rating,
     });
+  };
+
+  const handleFileChange = (files: FileList | null) => {
+    setUploadedFiles(files);
   };
 
   const onSubmit = async (data: z.infer<typeof FeedbackFormSchema>) => {
@@ -183,31 +188,7 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
               )}
             />
 
-            <div>
-              <FormLabel>Upload Photos (Optional)</FormLabel>
-              <div className="mt-2 border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-                <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
-                <div className="mt-4 flex justify-center text-sm">
-                  <label
-                    htmlFor="file-upload"
-                    className="relative cursor-pointer rounded-md bg-white font-medium text-primary hover:text-primary/80"
-                  >
-                    <span>Upload a file</span>
-                    <input
-                      id="file-upload"
-                      name="file-upload"
-                      type="file"
-                      className="sr-only"
-                      multiple
-                    />
-                  </label>
-                  <p className="pl-1 text-muted-foreground">or drag and drop</p>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  PNG, JPG, GIF up to 10MB
-                </p>
-              </div>
-            </div>
+            <FileUpload onChange={handleFileChange} />
 
             <Button 
               type="submit" 

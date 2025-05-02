@@ -7,25 +7,31 @@ import FeedbackForm from "@/components/feedback/FeedbackForm";
 import FeedbackSuccess from "@/components/feedback/FeedbackSuccess";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const FeedbackPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const hotelIdParam = searchParams.get('hotel');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
-  // Add effect to optimize initial loading
+  // Add effect to optimize initial loading with a proper timeout cleanup
   useEffect(() => {
-    // Simulate preloading data
+    // Only start loading content when auth state is determined
+    if (authLoading) return;
+    
+    // Simulate preloading data with a maximum timeout
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, isMobile ? 50 : 100); // Faster loading on mobile devices
+    }, isMobile ? 800 : 1000); // Slightly faster loading on mobile devices
     
-    return () => clearTimeout(timer);
-  }, [isMobile]);
+    return () => clearTimeout(timer); // Clean up timer
+  }, [authLoading, isMobile]);
   
   const handleFeedbackSubmitted = () => {
     setIsSuccess(true);
@@ -39,7 +45,15 @@ const FeedbackPage = () => {
     <div className="container-custom section-padding fade-in bg-white dark:bg-blue-950">
       <div className="max-w-3xl mx-auto">
         <FeedbackHeader />
-        {isLoading ? (
+        
+        {error && (
+          <Alert variant="destructive" className="my-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        {isLoading || authLoading ? (
           <div className="space-y-4 mt-6">
             <Skeleton className="h-10 w-3/4 bg-blue-50 dark:bg-blue-900/30" />
             <Skeleton className="h-32 w-full bg-blue-50 dark:bg-blue-900/30" />

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -26,6 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if user has admin role
   const checkAdminRole = async (userId: string) => {
+    if (!userId) return false;
+    
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -53,13 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         
-        // Check admin role when auth state changes
-        if (session?.user) {
-          await checkAdminRole(session.user.id);
+        // Check admin role when auth state changes, but avoid another infinite loop
+        // by using setTimeout to move this check out of the synchronous flow
+        if (currentSession?.user) {
+          setTimeout(() => {
+            checkAdminRole(currentSession.user.id);
+          }, 0);
         } else {
           setIsAdmin(false);
         }
@@ -67,18 +71,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Check admin role on initial load
-      if (session?.user) {
-        await checkAdminRole(session.user.id);
+    const initAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        
+        // Check admin role on initial load
+        if (data.session?.user) {
+          await checkAdminRole(data.session.user.id);
+        }
+      } catch (err) {
+        console.error("Error initializing auth:", err);
+      } finally {
+        // Always set loading to false even if there was an error
+        setLoading(false);
       }
-      
-      setLoading(false);
-    });
-
+    };
+    
+    initAuth();
+    
     return () => subscription.unsubscribe();
   }, []);
 

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { FeedbackItem, FeedbackRatings } from "@/types/feedback";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useFeedbackFilters } from './useFeedbackFilters';
 import { useFeedbackSelection } from './useFeedbackSelection';
 import { useFeedbackExport } from './useFeedbackExport';
@@ -11,10 +11,14 @@ import { useFeedbackStatus } from './useFeedbackStatus';
 export const useFeedbackData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
   // Use callback to memoize the fetch function
   const fetchFeedback = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       const { data, error } = await supabase
         .from('feedback')
@@ -31,35 +35,41 @@ export const useFeedbackData = () => {
         ratings: item.ratings as unknown as FeedbackRatings,
         // Ensure all required properties have values
         id: item.id,
-        name: item.name,
-        email: item.email,
-        comments: item.comments,
+        name: item.name || 'Anonymous',
+        email: item.email || '',
+        comments: item.comments || '',
         created_at: item.created_at,
-        hotel_id: item.hotel_id,
-        room_number: item.room_number,
-        stay_date: item.stay_date,
+        hotel_id: item.hotel_id || null,
+        room_number: item.room_number || '',
+        stay_date: item.stay_date || '',
         status: item.status || 'new',
-        user_id: item.user_id
+        user_id: item.user_id || null
       }));
       
       setFeedback(typedFeedback);
-    } catch (error) {
-      console.error('Error fetching feedback:', error);
+    } catch (err: any) {
+      console.error('Error fetching feedback:', err);
+      setError(err?.message || 'Could not fetch feedback data');
       toast({
         variant: "destructive",
         title: "Error",
         description: "Could not fetch feedback data. Please try again.",
       });
+      // Still set empty array to prevent loading indefinitely
+      setFeedback([]);
     } finally {
+      // Ensure loading state is always turned off, even on error
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchFeedback();
-  }, [fetchFeedback]);
+    // This effect should only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Import and use our new hooks
+  // Import and use our hooks
   const { 
     filteredFeedback, 
     filters, 
@@ -85,9 +95,10 @@ export const useFeedbackData = () => {
 
   const { handleUpdateStatus } = useFeedbackStatus(setFeedback);
 
-  // Return all the values and functions that were previously returned
+  // Return all values and functions
   return {
     isLoading,
+    error,
     feedback,
     filteredFeedback,
     selectedRows,

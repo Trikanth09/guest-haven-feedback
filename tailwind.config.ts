@@ -58,12 +58,12 @@ export default {
           foreground: 'hsl(var(--card-foreground))'
         },
         hotel: {
-          navy: '#1e3a8a',
-          gold: '#e3b04b',
-          cream: '#f8f5f0',
+          navy: '#1e3a8a',       // Dark Blue
+          gold: '#3B82F6',       // Primary Blue (replacing gold)
+          cream: '#E0F2FE',      // Light Blue (replacing cream)
           lightgray: '#f1f1f1',
-          softblue: '#a8c7dc',
-          charcoal: '#222222'
+          softblue: '#60A5FA',   // Sky Blue Accent
+          charcoal: '#0F172A'    // Dark background
         },
       },
       borderRadius: {

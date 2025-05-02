@@ -36,15 +36,15 @@ const FeedbackPage = () => {
   }
 
   return (
-    <div className="container-custom section-padding fade-in">
+    <div className="container-custom section-padding fade-in bg-white dark:bg-hotel-charcoal">
       <div className="max-w-3xl mx-auto">
         <FeedbackHeader />
         {isLoading ? (
           <div className="space-y-4 mt-6">
-            <Skeleton className="h-10 w-3/4" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-1/2" />
+            <Skeleton className="h-10 w-3/4 bg-hotel-cream dark:bg-hotel-navy/60" />
+            <Skeleton className="h-32 w-full bg-hotel-cream dark:bg-hotel-navy/60" />
+            <Skeleton className="h-10 w-full bg-hotel-cream dark:bg-hotel-navy/60" />
+            <Skeleton className="h-10 w-1/2 bg-hotel-cream dark:bg-hotel-navy/60" />
           </div>
         ) : (
           <FeedbackForm 

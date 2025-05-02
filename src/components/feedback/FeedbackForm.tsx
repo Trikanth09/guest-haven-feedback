@@ -16,7 +16,10 @@ import UserInfoFields from "./form/UserInfoFields";
 import HotelSelect from "./form/HotelSelect";
 import RatingCategories from "./form/RatingCategories";
 import FileUpload from "./form/FileUpload";
+import { useMicrosoftGraph } from "@/hooks/useMicrosoftGraph";
 import { z } from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface FeedbackFormProps {
   hotelIdParam: string | null;
@@ -28,9 +31,12 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
   const navigate = useNavigate();
   const { user } = useAuth();
   const [hotels, setHotels] = useState<{ id: string; name: string; }[]>([]);
+  const [selectedHotelName, setSelectedHotelName] = useState<string>("");
   const [selectedRatings, setSelectedRatings] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
+  const [excelSyncStatus, setExcelSyncStatus] = useState<{status: 'idle' | 'success' | 'error', message?: string}>({status: 'idle'});
+  const { saveFeedbackToExcel, isProcessing } = useMicrosoftGraph();
 
   const form = useForm<z.infer<typeof FeedbackFormSchema>>({
     resolver: zodResolver(FeedbackFormSchema),
@@ -63,6 +69,14 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
 
         if (error) throw error;
         setHotels(data || []);
+        
+        // Set initial hotel name if hotelId is provided
+        if (hotelIdParam && data) {
+          const selectedHotel = data.find(hotel => hotel.id === hotelIdParam);
+          if (selectedHotel) {
+            setSelectedHotelName(selectedHotel.name);
+          }
+        }
       } catch (error: any) {
         toast({
           title: "Error loading hotels",
@@ -73,7 +87,18 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
     };
 
     fetchHotels();
-  }, [toast]);
+  }, [toast, hotelIdParam]);
+
+  // Update selected hotel name when the hotel selection changes
+  useEffect(() => {
+    const hotelId = form.watch('hotelId');
+    if (hotelId && hotels.length > 0) {
+      const hotel = hotels.find(h => h.id === hotelId);
+      if (hotel) {
+        setSelectedHotelName(hotel.name);
+      }
+    }
+  }, [form.watch('hotelId'), hotels]);
 
   const handleStarClick = (categoryId: string, rating: number) => {
     setSelectedRatings((prev) => ({
@@ -93,8 +118,16 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
 
   const onSubmit = async (data: z.infer<typeof FeedbackFormSchema>) => {
     setIsSubmitting(true);
+    setExcelSyncStatus({status: 'idle'});
     
     try {
+      // Calculate average rating
+      const ratings = Object.values(data.ratings);
+      const averageRating = ratings.length > 0 ? 
+        ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : 
+        0;
+      
+      // Save to Supabase
       const feedbackData = {
         name: data.name,
         email: data.email,
@@ -112,15 +145,45 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
 
       if (error) throw error;
       
-      onFeedbackSubmitted();
+      // Save to OneDrive Excel using Microsoft Graph API
+      try {
+        const currentDate = new Date().toISOString().split('T')[0];
+        const excelResult = await saveFeedbackToExcel({
+          hotelName: selectedHotelName || "Unknown Hotel",
+          guestName: data.name,
+          rating: averageRating,
+          feedback: data.comments,
+          date: currentDate
+        });
+        
+        if (excelResult.success) {
+          setExcelSyncStatus({
+            status: 'success',
+            message: 'Your feedback was successfully saved to our Excel database.'
+          });
+        } else {
+          setExcelSyncStatus({
+            status: 'error',
+            message: 'Your feedback was saved, but could not be synchronized to Excel.'
+          });
+        }
+      } catch (excelError: any) {
+        console.error("Excel sync error:", excelError);
+        setExcelSyncStatus({
+          status: 'error',
+          message: 'Your feedback was saved, but could not be synchronized to Excel: ' + excelError.message
+        });
+      }
       
+      // Show general success message
       toast({
         title: "Feedback Submitted",
         description: "Thank you for your valuable feedback!",
       });
       
+      // Navigate after a delay
       setTimeout(() => {
-        navigate(`/hotels/${data.hotelId}`);
+        onFeedbackSubmitted();
       }, 2000);
     } catch (error: any) {
       setIsSubmitting(false);
@@ -142,6 +205,22 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
       </CardHeader>
 
       <CardContent>
+        {excelSyncStatus.status === 'success' && (
+          <Alert className="mb-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900">
+            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertTitle>Excel Sync Success</AlertTitle>
+            <AlertDescription>{excelSyncStatus.message}</AlertDescription>
+          </Alert>
+        )}
+        
+        {excelSyncStatus.status === 'error' && (
+          <Alert className="mb-4 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertTitle>Excel Sync Warning</AlertTitle>
+            <AlertDescription>{excelSyncStatus.message}</AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <UserInfoFields form={form} />
@@ -193,9 +272,9 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
             <Button 
               type="submit" 
               className="w-full bg-hotel-navy hover:bg-hotel-navy/90"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isProcessing}
             >
-              {isSubmitting ? "Submitting..." : "Submit Feedback"}
+              {isSubmitting ? "Submitting..." : isProcessing ? "Syncing with Excel..." : "Submit Feedback"}
             </Button>
           </form>
         </Form>

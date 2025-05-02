@@ -18,6 +18,7 @@ const FeedbackPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [excelSyncStatus, setExcelSyncStatus] = useState<{status: 'idle' | 'success' | 'error', message?: string}>({status: 'idle'});
   const isMobile = useIsMobile();
   
   // Add effect to optimize initial loading with a proper timeout cleanup
@@ -33,12 +34,15 @@ const FeedbackPage = () => {
     return () => clearTimeout(timer); // Clean up timer
   }, [authLoading, isMobile]);
   
-  const handleFeedbackSubmitted = () => {
+  const handleFeedbackSubmitted = (syncStatus?: {status: 'idle' | 'success' | 'error', message?: string}) => {
+    if (syncStatus) {
+      setExcelSyncStatus(syncStatus);
+    }
     setIsSuccess(true);
   };
 
   if (isSuccess) {
-    return <FeedbackSuccess />;
+    return <FeedbackSuccess excelSyncStatus={excelSyncStatus} />;
   }
 
   return (

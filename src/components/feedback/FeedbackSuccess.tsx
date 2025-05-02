@@ -1,9 +1,17 @@
 
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const FeedbackSuccess = () => {
+type FeedbackSuccessProps = {
+  excelSyncStatus?: {
+    status: 'idle' | 'success' | 'error',
+    message?: string
+  }
+};
+
+const FeedbackSuccess = ({ excelSyncStatus }: FeedbackSuccessProps = {}) => {
   const { user } = useAuth();
   
   return (
@@ -16,6 +24,16 @@ const FeedbackSuccess = () => {
             <p className="text-muted-foreground mb-2 dark:text-gray-300">
               Thank you for sharing your experience! Your feedback is valuable to us.
             </p>
+            
+            {excelSyncStatus?.status === 'error' && (
+              <Alert className="my-4 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 max-w-md">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertDescription>
+                  {excelSyncStatus.message || "Your feedback was saved, but could not be synchronized to Excel."}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {user && (
               <p className="text-sm text-muted-foreground mb-4 dark:text-gray-400">
                 Submitted as {user.email}

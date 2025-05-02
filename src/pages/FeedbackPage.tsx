@@ -6,6 +6,7 @@ import FeedbackHeader from "@/components/feedback/FeedbackHeader";
 import FeedbackForm from "@/components/feedback/FeedbackForm";
 import FeedbackSuccess from "@/components/feedback/FeedbackSuccess";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const FeedbackPage = () => {
   const [searchParams] = useSearchParams();
@@ -14,16 +15,17 @@ const FeedbackPage = () => {
   const hotelIdParam = searchParams.get('hotel');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const isMobile = useIsMobile();
   
   // Add effect to optimize initial loading
   useEffect(() => {
     // Simulate preloading data
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 100);
+    }, isMobile ? 50 : 100); // Faster loading on mobile devices
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [isMobile]);
   
   const handleFeedbackSubmitted = () => {
     setIsSuccess(true);

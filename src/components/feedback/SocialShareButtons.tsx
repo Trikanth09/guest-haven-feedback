@@ -3,6 +3,7 @@ import { Share2, Twitter, Facebook, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/context/ThemeContext";
 
 type SocialShareButtonsProps = {
   feedbackItem?: {
@@ -17,6 +18,7 @@ type SocialShareButtonsProps = {
 const SocialShareButtons = ({ feedbackItem, compact = false }: SocialShareButtonsProps) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
   
   const getAverageRating = () => {
     if (!feedbackItem?.ratings) return 0;

@@ -36,7 +36,8 @@ const SocialShareButtons = ({ feedbackItem, compact = false }: SocialShareButton
     return `"${truncatedComment}" - ${feedbackItem.name} (${getAverageRating()}/5 ⭐) via HotelEase`;
   };
 
-  const shareUrl = typeof window !== 'undefined' 
+  // Moved the declaration up before it's used
+  const currentUrl = typeof window !== 'undefined' 
     ? window.location.href 
     : 'https://hotelease.app';
 
@@ -49,7 +50,7 @@ const SocialShareButtons = ({ feedbackItem, compact = false }: SocialShareButton
         await navigator.share({
           title: 'Share Guest Feedback',
           text: message,
-          url: shareUrl,
+          url: currentUrl,
         });
         toast({
           title: "Shared successfully",
@@ -63,17 +64,17 @@ const SocialShareButtons = ({ feedbackItem, compact = false }: SocialShareButton
       
       switch (platform) {
         case 'twitter':
-          shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(shareUrl)}`;
+          shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(currentUrl)}`;
           break;
         case 'facebook':
-          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`;
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(message)}`;
           break;
         case 'linkedin':
-          shareUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=Guest%20Feedback&summary=${encodeURIComponent(message)}`;
+          shareUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(currentUrl)}&title=Guest%20Feedback&summary=${encodeURIComponent(message)}`;
           break;
         default:
           // Copy to clipboard fallback
-          await navigator.clipboard.writeText(`${message}\n${shareUrl}`);
+          await navigator.clipboard.writeText(`${message}\n${currentUrl}`);
           toast({
             title: "Copied to clipboard",
             description: "Share message copied to clipboard.",

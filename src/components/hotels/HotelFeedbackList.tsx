@@ -22,16 +22,16 @@ type HotelFeedbackListProps = {
 const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
   return (
     <div className="mt-8">
-      <h2 className="font-playfair text-2xl font-bold text-hotel-navy mb-6">Guest Feedback</h2>
+      <h2 className="font-playfair text-2xl font-bold text-blue-900 dark:text-blue-100 mb-6">Guest Feedback</h2>
       
       {feedback.length === 0 ? (
-        <Card>
+        <Card className="border-blue-100 dark:border-blue-900">
           <CardContent className="flex flex-col items-center justify-center py-8">
             <p className="text-muted-foreground text-center mb-4">
               No feedback has been submitted for this hotel yet.
             </p>
             <Link to={`/feedback?hotel=${hotelId}`}>
-              <Button className="bg-hotel-navy hover:bg-hotel-navy/90">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 Be the first to leave feedback
               </Button>
             </Link>
@@ -40,11 +40,11 @@ const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
       ) : (
         <div className="space-y-6">
           {feedback.map((item) => (
-            <Card key={item.id}>
+            <Card key={item.id} className="border-blue-100 dark:border-blue-900">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="font-playfair">{item.name}</CardTitle>
+                    <CardTitle className="font-playfair text-blue-900 dark:text-blue-100">{item.name}</CardTitle>
                     <CardDescription>
                       {new Date(item.created_at).toLocaleDateString('en-US', {
                         year: 'numeric',
@@ -56,11 +56,11 @@ const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
                   <div className="flex items-center space-x-2">
                     {Object.values(item.ratings).length > 0 && (
                       <div className="flex items-center">
-                        <span className="mr-2 font-medium">
+                        <span className="mr-2 font-medium text-blue-800 dark:text-blue-200">
                           {(Object.values(item.ratings).reduce((a, b) => a + b, 0) / 
                             Object.values(item.ratings).length).toFixed(1)}
                         </span>
-                        <Star className="h-5 w-5 text-hotel-gold fill-hotel-gold" />
+                        <Star className="h-5 w-5 text-blue-500 fill-blue-500" />
                       </div>
                     )}
                     <SocialShareButtons feedbackItem={item} compact />
@@ -72,14 +72,14 @@ const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
                   <div className="mb-4 overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-blue-200 dark:border-blue-800">
                           <TableHead>Category</TableHead>
                           <TableHead className="text-right">Rating</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {Object.entries(item.ratings).map(([category, rating]) => (
-                          <TableRow key={category}>
+                          <TableRow key={category} className="border-blue-100 dark:border-blue-900">
                             <TableCell className="capitalize">
                               {category.replace('_', ' ')}
                             </TableCell>
@@ -93,8 +93,8 @@ const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
                                       size={14}
                                       className={`${
                                         rating >= star
-                                          ? "text-hotel-gold fill-hotel-gold"
-                                          : "text-gray-300"
+                                          ? "text-blue-500 fill-blue-500"
+                                          : "text-gray-300 dark:text-gray-600"
                                       }`}
                                     />
                                   ))}
@@ -108,6 +108,9 @@ const HotelFeedbackList = ({ feedback, hotelId }: HotelFeedbackListProps) => {
                   </div>
                 )}
                 <p className="text-muted-foreground">{item.comments}</p>
+                <div className="mt-4 flex justify-end">
+                  <SocialShareButtons feedbackItem={item} />
+                </div>
               </CardContent>
             </Card>
           ))}

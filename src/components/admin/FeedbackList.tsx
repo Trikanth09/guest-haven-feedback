@@ -38,37 +38,67 @@ const FeedbackList = ({
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
-    const variant = 
-      status === 'new' ? 'default' : 
-      status === 'in-progress' ? 'secondary' : 
-      status === 'resolved' ? 'success' : 
-      'outline';
+    let variant;
+    switch (status) {
+      case 'new':
+        variant = 'default';
+        break;
+      case 'in-progress':
+        variant = 'secondary';
+        break;
+      case 'resolved':
+        variant = 'outline';
+        break;
+      default:
+        variant = 'outline';
+    }
     
-    return <Badge variant={variant as any}>{status}</Badge>;
+    const baseClasses = 'px-2 py-1 rounded-md text-xs font-medium';
+    let colorClasses = '';
+    
+    switch (status) {
+      case 'new':
+        colorClasses = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        break;
+      case 'in-progress':
+        colorClasses = 'bg-blue-50 text-blue-600 dark:bg-blue-800 dark:text-blue-100';
+        break;
+      case 'resolved':
+        colorClasses = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        break;
+      default:
+        colorClasses = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+    }
+    
+    return (
+      <span className={`${baseClasses} ${colorClasses}`}>
+        {status}
+      </span>
+    );
   };
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-8 w-full bg-blue-50 dark:bg-blue-900/30" />
+        <Skeleton className="h-20 w-full bg-blue-50 dark:bg-blue-900/30" />
+        <Skeleton className="h-20 w-full bg-blue-50 dark:bg-blue-900/30" />
+        <Skeleton className="h-20 w-full bg-blue-50 dark:bg-blue-900/30" />
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border dark:border-gray-700">
+    <div className="rounded-md border border-blue-100 dark:border-blue-800">
       <Table>
-        <TableHeader className="bg-muted/50 dark:bg-gray-800">
-          <TableRow>
+        <TableHeader className="bg-blue-50/50 dark:bg-blue-900/20">
+          <TableRow className="border-blue-100 dark:border-blue-800">
             <TableHead className="w-[50px]">
               <Checkbox 
                 checked={selectedRows.length === filteredFeedback.length && filteredFeedback.length > 0}
                 onCheckedChange={handleSelectAll}
                 aria-label="Select all"
-                className="dark:border-gray-600"
+                className="border-blue-300 dark:border-blue-700"
               />
             </TableHead>
             <TableHead>Guest</TableHead>
@@ -81,25 +111,25 @@ const FeedbackList = ({
         </TableHeader>
         <TableBody>
           {filteredFeedback.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground dark:text-gray-400">
+            <TableRow className="border-blue-100 dark:border-blue-800">
+              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                 No feedback entries found
               </TableCell>
             </TableRow>
           ) : (
             filteredFeedback.map((item) => (
-              <TableRow key={item.id} className="dark:border-gray-700">
+              <TableRow key={item.id} className="border-blue-100 dark:border-blue-800">
                 <TableCell>
                   <Checkbox 
                     checked={selectedRows.includes(item.id)}
                     onCheckedChange={() => handleRowSelect(item.id)}
                     aria-label={`Select feedback from ${item.name}`}
-                    className="dark:border-gray-600"
+                    className="border-blue-300 dark:border-blue-700"
                   />
                 </TableCell>
                 <TableCell>
-                  <div className="font-medium dark:text-white">{item.name}</div>
-                  <div className="text-sm text-muted-foreground dark:text-gray-400">{item.email}</div>
+                  <div className="font-medium text-blue-900 dark:text-blue-100">{item.name}</div>
+                  <div className="text-sm text-muted-foreground">{item.email}</div>
                 </TableCell>
                 <TableCell>
                   {new Date(item.created_at).toLocaleDateString()}
@@ -108,19 +138,19 @@ const FeedbackList = ({
                   {item.hotel_id || 'N/A'}
                 </TableCell>
                 <TableCell>
-                  {getAverageRating(item)}
+                  <span className="text-blue-700 dark:text-blue-300">{getAverageRating(item)}</span>
                 </TableCell>
                 <TableCell>
                   <Select
                     defaultValue={item.status}
                     onValueChange={(value) => handleUpdateStatus(item.id, value)}
                   >
-                    <SelectTrigger className="w-[130px] h-8 dark:bg-gray-800 dark:text-white dark:border-gray-700">
+                    <SelectTrigger className="w-[130px] h-8 border-blue-200 dark:border-blue-800 bg-white dark:bg-blue-950 text-blue-900 dark:text-blue-100">
                       <SelectValue>
                         <StatusBadge status={item.status} />
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <SelectContent className="border-blue-200 dark:border-blue-800 bg-white dark:bg-blue-950">
                       <SelectItem value="new">
                         <StatusBadge status="new" />
                       </SelectItem>
@@ -140,11 +170,17 @@ const FeedbackList = ({
                       size="icon"
                       onClick={() => exportSingleFeedback(item)}
                       title="Export as PDF"
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-400 dark:hover:text-blue-200 dark:hover:bg-blue-900/30"
                     >
                       <FileDown className="h-4 w-4" />
                     </Button>
                     <SocialShareButtons feedbackItem={item} compact />
-                    <Button variant="ghost" size="icon" title="View details">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      title="View details"
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-400 dark:hover:text-blue-200 dark:hover:bg-blue-900/30"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                   </div>

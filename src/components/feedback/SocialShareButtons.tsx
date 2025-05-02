@@ -38,7 +38,7 @@ const SocialShareButtons = ({ feedbackItem, compact = false }: SocialShareButton
     return `"${truncatedComment}" - ${feedbackItem.name} (${getAverageRating()}/5 ⭐) via HotelEase`;
   };
 
-  // Moved the declaration up before it's used
+  // Get current URL for sharing
   const currentUrl = typeof window !== 'undefined' 
     ? window.location.href 
     : 'https://hotelease.app';
@@ -102,7 +102,7 @@ const SocialShareButtons = ({ feedbackItem, compact = false }: SocialShareButton
       <Button 
         variant="ghost" 
         size="sm"
-        className="px-2"
+        className="px-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-900/30 dark:hover:text-blue-300"
         onClick={() => handleShare('native')}
         aria-label="Share feedback"
         title="Share feedback"
@@ -120,28 +120,28 @@ const SocialShareButtons = ({ feedbackItem, compact = false }: SocialShareButton
         variant="outline" 
         size="sm"
         onClick={() => handleShare('twitter')}
-        className="rounded-full w-8 h-8 p-0"
+        className="rounded-full w-8 h-8 p-0 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
         aria-label="Share on Twitter"
       >
-        <Twitter className="h-3.5 w-3.5" />
+        <Twitter className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
       </Button>
       <Button 
         variant="outline" 
         size="sm"
         onClick={() => handleShare('facebook')}
-        className="rounded-full w-8 h-8 p-0"
+        className="rounded-full w-8 h-8 p-0 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
         aria-label="Share on Facebook"
       >
-        <Facebook className="h-3.5 w-3.5" />
+        <Facebook className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
       </Button>
       <Button 
         variant="outline" 
         size="sm"
         onClick={() => handleShare('linkedin')}
-        className="rounded-full w-8 h-8 p-0"
+        className="rounded-full w-8 h-8 p-0 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
         aria-label="Share on LinkedIn"
       >
-        <Linkedin className="h-3.5 w-3.5" />
+        <Linkedin className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
       </Button>
     </div>
   );

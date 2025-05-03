@@ -64,8 +64,10 @@ export const useMicrosoftGraph = () => {
     try {
       // Format the feedback items for Excel export
       const rows = feedbackItems.map(item => {
-        const avgRating = Object.values(item.ratings).reduce((a: number, b: number) => a + b, 0) / 
-                        Object.values(item.ratings).length;
+        // Fix: Explicitly cast the values to numbers before reduction
+        const ratings = Object.values(item.ratings).map(rating => Number(rating));
+        const avgRating = ratings.length > 0 ? 
+                        ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : 0;
         
         return [
           item.hotel_id || 'Unknown Hotel',

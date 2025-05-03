@@ -1,25 +1,21 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { FeedbackFormSchema } from "./types/feedbackTypes";
 import UserInfoFields from "./form/UserInfoFields";
 import HotelSelect from "./form/HotelSelect";
 import RatingCategories from "./form/RatingCategories";
 import FileUpload from "./form/FileUpload";
-import { useMicrosoftGraph } from "@/hooks/useMicrosoftGraph";
+import FormAlerts from "./form/FormAlerts";
+import SubmitButton from "./form/SubmitButton";
+import { useFeedbackSubmission } from "@/hooks/useFeedbackSubmission";
 import { z } from "zod";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface FeedbackFormProps {
   hotelIdParam: string | null;
@@ -27,16 +23,18 @@ interface FeedbackFormProps {
 }
 
 const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [hotels, setHotels] = useState<{ id: string; name: string; }[]>([]);
   const [selectedHotelName, setSelectedHotelName] = useState<string>("");
   const [selectedRatings, setSelectedRatings] = useState<Record<string, number>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
-  const [excelSyncStatus, setExcelSyncStatus] = useState<{status: 'idle' | 'success' | 'error', message?: string}>({status: 'idle'});
-  const { saveFeedbackToExcel, isProcessing } = useMicrosoftGraph();
+
+  const { 
+    submitFeedback, 
+    isSubmitting, 
+    isProcessing, 
+    excelSyncStatus 
+  } = useFeedbackSubmission(onFeedbackSubmitted);
 
   const form = useForm<z.infer<typeof FeedbackFormSchema>>({
     resolver: zodResolver(FeedbackFormSchema),
@@ -78,16 +76,12 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
           }
         }
       } catch (error: any) {
-        toast({
-          title: "Error loading hotels",
-          description: error.message,
-          variant: "destructive",
-        });
+        console.error("Error loading hotels:", error);
       }
     };
 
     fetchHotels();
-  }, [toast, hotelIdParam]);
+  }, [hotelIdParam]);
 
   // Update selected hotel name when the hotel selection changes
   useEffect(() => {
@@ -117,82 +111,7 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
   };
 
   const onSubmit = async (data: z.infer<typeof FeedbackFormSchema>) => {
-    setIsSubmitting(true);
-    setExcelSyncStatus({status: 'idle'});
-    
-    try {
-      // Calculate average rating
-      const ratings = Object.values(data.ratings);
-      const averageRating = ratings.length > 0 ? 
-        ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : 
-        0;
-      
-      // Save to Supabase
-      const feedbackData = {
-        name: data.name,
-        email: data.email,
-        room_number: data.roomNumber,
-        stay_date: data.stayDate,
-        hotel_id: data.hotelId,
-        ratings: data.ratings,
-        comments: data.comments,
-        user_id: user?.id
-      };
-
-      const { error } = await supabase
-        .from('feedback')
-        .insert(feedbackData);
-
-      if (error) throw error;
-      
-      // Save to OneDrive Excel using Microsoft Graph API
-      try {
-        const currentDate = new Date().toISOString().split('T')[0];
-        const excelResult = await saveFeedbackToExcel({
-          hotelName: selectedHotelName || "Unknown Hotel",
-          guestName: data.name,
-          rating: averageRating,
-          feedback: data.comments,
-          date: currentDate
-        });
-        
-        if (excelResult.success) {
-          setExcelSyncStatus({
-            status: 'success',
-            message: 'Your feedback was successfully saved to our Excel database.'
-          });
-        } else {
-          setExcelSyncStatus({
-            status: 'error',
-            message: 'Your feedback was saved, but could not be synchronized to Excel.'
-          });
-        }
-      } catch (excelError: any) {
-        console.error("Excel sync error:", excelError);
-        setExcelSyncStatus({
-          status: 'error',
-          message: 'Your feedback was saved, but could not be synchronized to Excel: ' + excelError.message
-        });
-      }
-      
-      // Show general success message
-      toast({
-        title: "Feedback Submitted",
-        description: "Thank you for your valuable feedback!",
-      });
-      
-      // Navigate after a delay
-      setTimeout(() => {
-        onFeedbackSubmitted();
-      }, 2000);
-    } catch (error: any) {
-      setIsSubmitting(false);
-      toast({
-        title: "Submission Failed",
-        description: error.message || "There was an error submitting your feedback. Please try again.",
-        variant: "destructive",
-      });
-    }
+    await submitFeedback(data, selectedHotelName, user);
   };
 
   return (
@@ -205,21 +124,7 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
       </CardHeader>
 
       <CardContent>
-        {excelSyncStatus.status === 'success' && (
-          <Alert className="mb-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900">
-            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <AlertTitle>Excel Sync Success</AlertTitle>
-            <AlertDescription>{excelSyncStatus.message}</AlertDescription>
-          </Alert>
-        )}
-        
-        {excelSyncStatus.status === 'error' && (
-          <Alert className="mb-4 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            <AlertTitle>Excel Sync Warning</AlertTitle>
-            <AlertDescription>{excelSyncStatus.message}</AlertDescription>
-          </Alert>
-        )}
+        <FormAlerts excelSyncStatus={excelSyncStatus} />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -227,7 +132,6 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <HotelSelect form={form} hotels={hotels} />
-              
               <FormField
                 control={form.control}
                 name="roomNumber"
@@ -269,13 +173,7 @@ const FeedbackForm = ({ hotelIdParam, onFeedbackSubmitted }: FeedbackFormProps) 
 
             <FileUpload onChange={handleFileChange} />
 
-            <Button 
-              type="submit" 
-              className="w-full bg-hotel-navy hover:bg-hotel-navy/90"
-              disabled={isSubmitting || isProcessing}
-            >
-              {isSubmitting ? "Submitting..." : isProcessing ? "Syncing with Excel..." : "Submit Feedback"}
-            </Button>
+            <SubmitButton isSubmitting={isSubmitting} isProcessing={isProcessing} />
           </form>
         </Form>
       </CardContent>

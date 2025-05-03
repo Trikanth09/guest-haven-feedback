@@ -15,6 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     setLoading,
     isAdmin,
+    setIsAdmin,
     checkAdminRole,
     signUp,
     signIn,

@@ -57,8 +57,60 @@ export const useMicrosoftGraph = () => {
     }
   };
 
+  // Export multiple feedback entries to Excel
+  const exportFeedbackBulkToExcel = async (feedbackItems: any[]) => {
+    setIsProcessing(true);
+    
+    try {
+      // Format the feedback items for Excel export
+      const rows = feedbackItems.map(item => {
+        const avgRating = Object.values(item.ratings).reduce((a: number, b: number) => a + b, 0) / 
+                        Object.values(item.ratings).length;
+        
+        return [
+          item.hotel_id || 'Unknown Hotel',
+          item.name,
+          avgRating.toFixed(1),
+          item.comments,
+          new Date(item.created_at).toLocaleDateString()
+        ];
+      });
+      
+      // Call Supabase Edge Function to handle bulk export
+      const { data, error } = await supabase.functions.invoke('microsoft-graph-excel', {
+        body: {
+          action: 'appendRows',
+          fileUrl: 'https://1drv.ms/x/c/b3809bd057d8352e/EWO3tU4npKVCn5fcm_5X9nMBmTnsiFSncXrQzLNMsllvTw',
+          worksheetName: 'FeedbackData',
+          rows: rows
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Excel Export Complete",
+        description: `Successfully exported ${rows.length} feedback entries to Excel.`,
+      });
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error exporting to Excel:", error);
+      toast({
+        variant: "destructive",
+        title: "Excel Export Failed",
+        description: "Could not export feedback to Excel. " + (error.message || "Please try again."),
+      });
+      
+      return { success: false, error };
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return {
     saveFeedbackToExcel,
+    exportFeedbackBulkToExcel,
     isProcessing
   };
 };

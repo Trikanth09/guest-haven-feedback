@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
   session: Session | null;
@@ -164,40 +164,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const adminSignIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast({
-          title: "Admin Login Failed",
-          description: error.message,
-          variant: "destructive",
+      // Hardcoded admin credentials check
+      if (email === "trikanth09@gmail.com" && password === "Trikanth@09") {
+        // If credentials match, proceed with regular sign in
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
         });
-        return { error };
-      }
-      
-      // Verify the user is an admin after login
-      if (user) {
-        const isUserAdmin = await checkAdminRole(user.id);
-        if (!isUserAdmin) {
-          // Sign out if not admin
-          await supabase.auth.signOut();
+
+        if (error) {
           toast({
-            title: "Access Denied",
-            description: "This account does not have admin privileges.",
+            title: "Admin Login Failed",
+            description: error.message,
             variant: "destructive",
           });
-          return { error: new Error("Not an admin account") };
+          return { error };
         }
-      }
+        
+        // Set admin status directly (since this is hardcoded)
+        setIsAdmin(true);
 
-      toast({
-        title: "Admin Login Successful",
-        description: "Welcome to the admin panel!",
-      });
-      return { error: null };
+        toast({
+          title: "Admin Login Successful",
+          description: "Welcome to the admin panel!",
+        });
+        return { error: null };
+      } else {
+        // If credentials don't match, return an error
+        toast({
+          title: "Access Denied",
+          description: "Invalid admin credentials",
+          variant: "destructive",
+        });
+        return { error: new Error("Invalid admin credentials") };
+      }
     } catch (err: any) {
       toast({
         title: "Admin Login Failed",

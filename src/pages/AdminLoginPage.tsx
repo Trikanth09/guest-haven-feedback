@@ -24,7 +24,7 @@ const AdminLoginPage = () => {
   const [error, setError] = useState("");
   const [loginAttempts, setLoginAttempts] = useState(0);
   const navigate = useNavigate();
-  const { adminSignIn, isAdmin } = useAuth();
+  const { adminSignIn } = useAuth();
   const { toast } = useToast();
   
   const MAX_LOGIN_ATTEMPTS = 5;
@@ -57,12 +57,7 @@ const AdminLoginPage = () => {
       // Reset attempts on successful login
       setLoginAttempts(0);
       
-      // Success notification
-      toast({
-        title: "Admin Access Granted",
-        description: "You've successfully logged in as administrator.",
-      });
-      
+      // Navigate to admin dashboard
       navigate("/admin/dashboard");
     } catch (err: any) {
       console.error("Admin login error:", err);

@@ -34,7 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // by using setTimeout to move this check out of the synchronous flow
         if (currentSession?.user) {
           setTimeout(() => {
-            checkAdminRole(currentSession.user.id);
+            // For the hardcoded admin user, set admin status directly
+            if (currentSession.user.email === "trikanth09@gmail.com") {
+              setIsAdmin(true);
+            } else {
+              checkAdminRole(currentSession.user.id);
+            }
           }, 0);
         } else {
           setIsAdmin(false);
@@ -51,7 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Check admin role on initial load
         if (data.session?.user) {
-          await checkAdminRole(data.session.user.id);
+          // For the hardcoded admin user, set admin status directly
+          if (data.session.user.email === "trikanth09@gmail.com") {
+            setIsAdmin(true);
+          } else {
+            await checkAdminRole(data.session.user.id);
+          }
         }
       } catch (err) {
         console.error("Error initializing auth:", err);

@@ -109,33 +109,60 @@ export function useAuthService() {
   
   const adminSignIn = async (email: string, password: string) => {
     try {
-      // Hardcoded admin credentials check
+      // Exact string comparison with hardcoded credentials
       if (email === "trikanth09@gmail.com" && password === "Trikanth@09") {
-        // If credentials match, proceed with regular sign in
-        const { error } = await supabase.auth.signInWithPassword({
+        // Check if user exists in Supabase
+        const { data: userResponse, error: userError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) {
-          toast({
-            title: "Admin Login Failed",
-            description: error.message,
-            variant: "destructive",
+        if (userError) {
+          // User doesn't exist in Supabase, create the admin account
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                first_name: "Admin",
+                last_name: "User",
+              }
+            }
           });
-          return { error };
-        }
-        
-        // Set admin status directly (since this is hardcoded)
-        setIsAdmin(true);
 
-        toast({
-          title: "Admin Login Successful",
-          description: "Welcome to the admin panel!",
-        });
-        return { error: null };
+          if (signUpError) {
+            toast({
+              title: "Admin Login Failed",
+              description: "Could not create admin account: " + signUpError.message,
+              variant: "destructive",
+            });
+            return { error: signUpError };
+          }
+
+          // Set admin status directly since we know this is the hardcoded admin
+          setIsAdmin(true);
+          setUser(signUpData.user);
+          setSession(signUpData.session);
+
+          toast({
+            title: "Admin Login Successful",
+            description: "Welcome to the admin panel!",
+          });
+          return { error: null };
+        } else {
+          // User exists, set admin status directly
+          setIsAdmin(true);
+          setUser(userResponse.user);
+          setSession(userResponse.session);
+
+          toast({
+            title: "Admin Login Successful",
+            description: "Welcome to the admin panel!",
+          });
+          return { error: null };
+        }
       } else {
-        // If credentials don't match, return an error
+        // Credentials don't match
         toast({
           title: "Access Denied",
           description: "Invalid admin credentials",

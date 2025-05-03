@@ -1,1 +1,24 @@
+
+# This file is used to configure your Supabase project.
+# It defines the settings that apply to different Supabase resources.
+
 project_id = "fvegutbytclvrdcfxdyr"
+
+[api]
+
+[db]
+# Enable Supabase Realtime for the feedback table
+[realtime]
+subscription_events = "insert, update, delete"
+
+[realtime.tables.feedback]
+events = ["INSERT", "UPDATE", "DELETE"]
+
+[auth]
+# Configure auth settings (advanced)
+# site_url = "https://example.com"
+# additional_redirect_urls = ["https://example.com/callback"]
+
+[analytics]
+# Configure analytics settings (advanced)
+

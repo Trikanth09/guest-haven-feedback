@@ -15,6 +15,7 @@ export interface FeedbackItem {
   name: string;
   email: string;
   hotel_id?: string | null;
+  hotel_name?: string;
   room_number?: string | null;
   stay_date?: string | null;
   ratings: FeedbackRatings;

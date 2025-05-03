@@ -22,7 +22,7 @@ export const useFeedbackData = () => {
     try {
       const { data, error } = await supabase
         .from('feedback')
-        .select('*')
+        .select('*, hotels(name)')
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -33,6 +33,7 @@ export const useFeedbackData = () => {
       const typedFeedback: FeedbackItem[] = (data || []).map(item => ({
         ...item,
         ratings: item.ratings as unknown as FeedbackRatings,
+        hotel_name: item.hotels?.name || 'Unknown Hotel',
         // Ensure all required properties have values
         id: item.id,
         name: item.name || 'Anonymous',
@@ -65,9 +66,75 @@ export const useFeedbackData = () => {
 
   useEffect(() => {
     fetchFeedback();
-    // This effect should only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    
+    // Set up real-time subscription for new feedback entries
+    const channel = supabase
+      .channel('public:feedback')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'feedback' 
+        }, 
+        (payload) => {
+          console.log('Real-time feedback update:', payload);
+          
+          // Handle the different event types
+          if (payload.eventType === 'INSERT') {
+            const newFeedback = payload.new as any;
+            
+            // Fetch the hotel name for the new feedback
+            supabase
+              .from('hotels')
+              .select('name')
+              .eq('id', newFeedback.hotel_id)
+              .single()
+              .then(({ data }) => {
+                const processedFeedback: FeedbackItem = {
+                  ...newFeedback,
+                  ratings: newFeedback.ratings as unknown as FeedbackRatings,
+                  hotel_name: data?.name || 'Unknown Hotel',
+                  name: newFeedback.name || 'Anonymous',
+                  email: newFeedback.email || '',
+                  comments: newFeedback.comments || '',
+                  room_number: newFeedback.room_number || '',
+                  stay_date: newFeedback.stay_date || '',
+                  status: newFeedback.status || 'new',
+                };
+                
+                setFeedback(prev => [processedFeedback, ...prev]);
+                
+                toast({
+                  title: "New Feedback",
+                  description: `New feedback received from ${processedFeedback.name}`,
+                });
+              });
+          } else if (payload.eventType === 'UPDATE') {
+            // Update existing feedback item
+            setFeedback(prev => 
+              prev.map(item => 
+                item.id === payload.new.id ? {
+                  ...item,
+                  ...payload.new,
+                  ratings: payload.new.ratings as unknown as FeedbackRatings,
+                } : item
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            // Remove deleted feedback
+            setFeedback(prev => 
+              prev.filter(item => item.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe();
+    
+    // Clean up the subscription when the component unmounts
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchFeedback]);
 
   // Import and use our hooks
   const { 

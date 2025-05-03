@@ -27,7 +27,8 @@ const AdminDashboard = () => {
     exportSingleFeedback,
     exportSelectedFeedback,
     backupFeedback,
-    getAverageRating
+    getAverageRating,
+    fetchFeedback
   } = useFeedbackData();
 
   return (
@@ -58,7 +59,7 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle className="dark:text-white">Guest Feedback</CardTitle>
                 <CardDescription className="dark:text-gray-400">
-                  View and manage feedback submissions
+                  View and manage feedback submissions in real-time
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -83,6 +84,7 @@ const AdminDashboard = () => {
                   handleSelectAll={handleSelectAll}
                   handleUpdateStatus={handleUpdateStatus}
                   exportSingleFeedback={exportSingleFeedback}
+                  fetchFeedback={fetchFeedback}
                 />
               </CardContent>
             </Card>

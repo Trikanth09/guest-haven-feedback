@@ -97,14 +97,39 @@ export const useFeedbackData = () => {
             const newFeedback = payload.new as any;
             
             // Fetch the hotel name for the new feedback
-            // Fix: Convert the Promise properly to handle catch
+            // Fix the Promise handling to avoid using .catch directly on PromiseLike
             if (newFeedback.hotel_id) {
+              // Use proper Promise handling
               supabase
                 .from('hotels')
                 .select('name')
                 .eq('id', newFeedback.hotel_id)
                 .single()
-                .then(({ data }) => {
+                .then(({ data, error }) => {
+                  if (error) {
+                    console.error('Error fetching hotel name:', error);
+                    // Add the feedback even without the hotel name
+                    const processedFeedback: FeedbackItem = {
+                      ...newFeedback,
+                      ratings: newFeedback.ratings as unknown as FeedbackRatings,
+                      hotel_name: 'Unknown Hotel',
+                      name: newFeedback.name || 'Anonymous',
+                      email: newFeedback.email || '',
+                      comments: newFeedback.comments || '',
+                      room_number: newFeedback.room_number || '',
+                      stay_date: newFeedback.stay_date || '',
+                      status: newFeedback.status || 'new',
+                    };
+                    
+                    setFeedback(prev => [processedFeedback, ...prev]);
+                    
+                    toast({
+                      title: "New Feedback",
+                      description: `New feedback received from ${processedFeedback.name}`,
+                    });
+                    return;
+                  }
+                  
                   const processedFeedback: FeedbackItem = {
                     ...newFeedback,
                     ratings: newFeedback.ratings as unknown as FeedbackRatings,
@@ -124,23 +149,6 @@ export const useFeedbackData = () => {
                     title: "New Feedback",
                     description: `New feedback received from ${processedFeedback.name}`,
                   });
-                })
-                .catch(err => {
-                  console.error('Error fetching hotel name:', err);
-                  // Add the feedback even without the hotel name
-                  const processedFeedback: FeedbackItem = {
-                    ...newFeedback,
-                    ratings: newFeedback.ratings as unknown as FeedbackRatings,
-                    hotel_name: 'Unknown Hotel',
-                    name: newFeedback.name || 'Anonymous',
-                    email: newFeedback.email || '',
-                    comments: newFeedback.comments || '',
-                    room_number: newFeedback.room_number || '',
-                    stay_date: newFeedback.stay_date || '',
-                    status: newFeedback.status || 'new',
-                  };
-                  
-                  setFeedback(prev => [processedFeedback, ...prev]);
                 });
             } else {
               // If no hotel_id, just add the feedback without hotel name

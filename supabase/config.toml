@@ -7,11 +7,17 @@ project_id = "fvegutbytclvrdcfxdyr"
 [api]
 
 [db]
+
 # Enable Supabase Realtime for the feedback table
 [realtime]
+enabled = true
+database_polling_interval_milliseconds = 1000
+max_subscription_slots = 100
 subscription_events = "insert, update, delete"
 
-[realtime.tables.feedback]
+[[realtime.tables]]
+name = "feedback"
+schema = "public"
 events = ["INSERT", "UPDATE", "DELETE"]
 
 [auth]
@@ -21,4 +27,3 @@ events = ["INSERT", "UPDATE", "DELETE"]
 
 [analytics]
 # Configure analytics settings (advanced)
-

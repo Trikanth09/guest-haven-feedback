@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { FeedbackItem, FeedbackRatings } from "@/types/feedback";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ export const useFeedbackData = () => {
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const pollingIntervalRef = useRef<number | null>(null);
   
   // Use callback to memoize the fetch function
   const fetchFeedback = useCallback(async () => {
@@ -64,10 +65,18 @@ export const useFeedbackData = () => {
     }
   }, [toast]);
 
+  // Initial fetch and setup real-time subscription
   useEffect(() => {
+    // Initial fetch of feedback
     fetchFeedback();
     
-    // Set up real-time subscription for new feedback entries
+    // Set up polling as a backup to real-time (every 10 seconds)
+    pollingIntervalRef.current = window.setInterval(() => {
+      console.log('Polling for new feedback data...');
+      fetchFeedback();
+    }, 10000); // 10 seconds
+    
+    // Set up real-time subscription for feedback table changes
     const channel = supabase
       .channel('public:feedback')
       .on('postgres_changes', 
@@ -130,8 +139,11 @@ export const useFeedbackData = () => {
       )
       .subscribe();
     
-    // Clean up the subscription when the component unmounts
+    // Clean up the subscription and polling when the component unmounts
     return () => {
+      if (pollingIntervalRef.current !== null) {
+        window.clearInterval(pollingIntervalRef.current);
+      }
       supabase.removeChannel(channel);
     };
   }, [fetchFeedback]);

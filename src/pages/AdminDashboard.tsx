@@ -7,6 +7,7 @@ import FilterBar from "@/components/admin/FilterBar";
 import FeedbackList from "@/components/admin/FeedbackList";
 import SummaryCards from "@/components/admin/SummaryCards";
 import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
+import { useEffect } from "react";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -30,6 +31,13 @@ const AdminDashboard = () => {
     getAverageRating,
     fetchFeedback
   } = useFeedbackData();
+
+  // Log when feedback is loaded
+  useEffect(() => {
+    if (!isLoading) {
+      console.log(`Admin Dashboard loaded with ${feedback.length} feedback entries`);
+    }
+  }, [isLoading, feedback.length]);
 
   return (
     <div className="container-custom section-padding fade-in">

@@ -7,7 +7,10 @@ import { useMicrosoftGraph } from "@/hooks/useMicrosoftGraph";
 import { z } from "zod";
 import { FeedbackFormSchema } from "@/components/feedback/types/feedbackTypes";
 
-export const useFeedbackSubmission = (onFeedbackSubmitted: () => void) => {
+export const useFeedbackSubmission = (onFeedbackSubmitted: (syncStatus?: {
+  status: 'idle' | 'success' | 'error';
+  message?: string;
+}) => void) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +35,7 @@ export const useFeedbackSubmission = (onFeedbackSubmitted: () => void) => {
         ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : 
         0;
       
-      // Save to Supabase
+      // Prepare feedback data with consistent structure
       const feedbackData = {
         name: data.name,
         email: data.email,
@@ -41,9 +44,12 @@ export const useFeedbackSubmission = (onFeedbackSubmitted: () => void) => {
         hotel_id: data.hotelId,
         ratings: data.ratings,
         comments: data.comments,
-        user_id: user?.id
+        user_id: user?.id,
+        status: 'new', // Default status for new feedback
+        created_at: new Date().toISOString(), // Explicitly set creation time
       };
 
+      // Save to Supabase
       const { error } = await supabase
         .from('feedback')
         .insert(feedbackData);
@@ -88,7 +94,7 @@ export const useFeedbackSubmission = (onFeedbackSubmitted: () => void) => {
       
       // Navigate after a delay
       setTimeout(() => {
-        onFeedbackSubmitted();
+        onFeedbackSubmitted(excelSyncStatus);
       }, 2000);
     } catch (error: any) {
       setIsSubmitting(false);

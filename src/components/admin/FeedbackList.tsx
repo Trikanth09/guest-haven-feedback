@@ -32,6 +32,7 @@ const FeedbackList = ({
   fetchFeedback,
 }: FeedbackListProps) => {
   const [lastRefreshTime, setLastRefreshTime] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Get average rating helper function
   const getAverageRating = (item: FeedbackItem) => {
@@ -82,11 +83,17 @@ const FeedbackList = ({
     );
   };
 
-  const handleManualRefresh = () => {
+  const handleManualRefresh = async () => {
     if (fetchFeedback) {
-      fetchFeedback().then(() => {
+      setIsRefreshing(true);
+      try {
+        await fetchFeedback();
         setLastRefreshTime(new Date());
-      });
+      } catch (error) {
+        console.error("Error refreshing feedback:", error);
+      } finally {
+        setIsRefreshing(false);
+      }
     }
   };
 
@@ -123,11 +130,12 @@ const FeedbackList = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className="flex items-center gap-1 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400" 
+          className="flex items-center gap-1 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400"
           onClick={handleManualRefresh}
+          disabled={isRefreshing}
         >
-          <RefreshCw className="h-4 w-4 mr-1" />
-          <span>Refresh Now</span>
+          <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>{isRefreshing ? 'Refreshing...' : 'Refresh Now'}</span>
         </Button>
       </div>
 

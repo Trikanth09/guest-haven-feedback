@@ -49,12 +49,17 @@ export const useFeedbackSubmission = (onFeedbackSubmitted: (syncStatus?: {
         created_at: new Date().toISOString(), // Explicitly set creation time
       };
 
+      console.log("Submitting feedback data:", feedbackData);
+      
       // Save to Supabase
-      const { error } = await supabase
+      const { data: savedFeedback, error } = await supabase
         .from('feedback')
-        .insert(feedbackData);
+        .insert(feedbackData)
+        .select();
 
       if (error) throw error;
+      
+      console.log("Feedback saved successfully:", savedFeedback);
       
       // Save to OneDrive Excel using Microsoft Graph API
       try {
@@ -98,6 +103,7 @@ export const useFeedbackSubmission = (onFeedbackSubmitted: (syncStatus?: {
       }, 2000);
     } catch (error: any) {
       setIsSubmitting(false);
+      console.error("Feedback submission error:", error);
       toast({
         title: "Submission Failed",
         description: error.message || "There was an error submitting your feedback. Please try again.",

@@ -21,6 +21,7 @@ export const useFeedbackData = () => {
     setError(null);
     
     try {
+      console.log("Fetching feedback data...");
       const { data, error } = await supabase
         .from('feedback')
         .select('*, hotels(name)')
@@ -29,6 +30,8 @@ export const useFeedbackData = () => {
       if (error) {
         throw error;
       }
+      
+      console.log("Feedback data received:", data);
       
       // Transform the data to ensure ratings are properly typed
       const typedFeedback: FeedbackItem[] = (data || []).map(item => ({
@@ -49,6 +52,7 @@ export const useFeedbackData = () => {
       }));
       
       setFeedback(typedFeedback);
+      console.log("Processed feedback items:", typedFeedback.length);
     } catch (err: any) {
       console.error('Error fetching feedback:', err);
       setError(err?.message || 'Could not fetch feedback data');
@@ -111,12 +115,30 @@ export const useFeedbackData = () => {
                   status: newFeedback.status || 'new',
                 };
                 
+                console.log('Adding new feedback item to state:', processedFeedback);
                 setFeedback(prev => [processedFeedback, ...prev]);
                 
                 toast({
                   title: "New Feedback",
                   description: `New feedback received from ${processedFeedback.name}`,
                 });
+              })
+              .catch(err => {
+                console.error('Error fetching hotel name:', err);
+                // Add the feedback even without the hotel name
+                const processedFeedback: FeedbackItem = {
+                  ...newFeedback,
+                  ratings: newFeedback.ratings as unknown as FeedbackRatings,
+                  hotel_name: 'Unknown Hotel',
+                  name: newFeedback.name || 'Anonymous',
+                  email: newFeedback.email || '',
+                  comments: newFeedback.comments || '',
+                  room_number: newFeedback.room_number || '',
+                  stay_date: newFeedback.stay_date || '',
+                  status: newFeedback.status || 'new',
+                };
+                
+                setFeedback(prev => [processedFeedback, ...prev]);
               });
           } else if (payload.eventType === 'UPDATE') {
             // Update existing feedback item
@@ -137,7 +159,9 @@ export const useFeedbackData = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Supabase real-time subscription status:', status);
+      });
     
     // Clean up the subscription and polling when the component unmounts
     return () => {
